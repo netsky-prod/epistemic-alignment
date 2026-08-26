@@ -30,6 +30,15 @@ class InitializationTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 initialize(root, "other", "Other")
 
+    def test_init_escapes_json_special_project_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            project_id = 'checkout\\next\niteration'
+            title = 'The "new" checkout\nredesign'
+            artifacts = load_artifact_set(initialize(root, project_id, title))
+            self.assertEqual(artifacts.manifest["project"]["id"], project_id)
+            self.assertEqual(artifacts.manifest["project"]["title"], title)
+
     def test_cli_initializes_requested_root(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "project"

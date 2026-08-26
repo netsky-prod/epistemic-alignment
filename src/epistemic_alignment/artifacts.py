@@ -24,11 +24,13 @@ def initialize(target_root: Path, project_id: str, title: str) -> Path:
     for path in alignment_dir.rglob("*"):
         if path.is_file():
             content = path.read_text(encoding="utf-8")
+            if path.name == "manifest.yaml":
+                manifest = json.loads(content)
+                manifest["project"] = {"id": project_id, "title": title}
+                content = json.dumps(manifest, indent=2) + "\n"
             _write_text(
                 path,
-                content.replace("__PROJECT_ID__", project_id).replace(
-                    "__PROJECT_TITLE__", title
-                ),
+                content,
             )
     return alignment_dir
 
