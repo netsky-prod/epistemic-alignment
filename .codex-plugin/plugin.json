@@ -1,0 +1,31 @@
+{
+  "name": "alignment",
+  "version": "0.1.0",
+  "description": "Build a shared, auditable understanding before implementation planning.",
+  "author": {
+    "name": "Epistemic Alignment contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "alignment",
+    "discovery",
+    "requirements",
+    "architecture",
+    "traceability"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Epistemic Alignment",
+    "shortDescription": "Create an approved, traceable project understanding.",
+    "longDescription": "Guides teams from discovery through approved requirements, behavior, architecture, and a Superpowers handoff.",
+    "developerName": "Epistemic Alignment contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Align this project before implementation planning."
+    ]
+  }
+}
