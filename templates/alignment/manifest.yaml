@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "project": {"id": "__PROJECT_ID__", "title": "__PROJECT_TITLE__"},
+  "current_phase": "discover",
+  "completed_phases": [],
+  "artifacts": [
+    "charter.md",
+    "stakeholders.md",
+    "glossary.md",
+    "assumptions.md",
+    "open-questions.md",
+    "architecture/context.md",
+    "architecture/containers.md",
+    "architecture/components.md",
+    "review-state.json"
+  ],
+  "renderer": {"adapter": null, "status": "not_generated", "location": null, "rendered_hash": null},
+  "last_validation": null,
+  "review_hash": null
+}

@@ -1,6 +1,8 @@
 import argparse
+from pathlib import Path
 
 from . import __version__
+from .artifacts import initialize
 
 
 def build_parser():
@@ -10,11 +12,22 @@ def build_parser():
         action="version",
         version=f"epistemic-alignment {__version__}",
     )
+    subparsers = parser.add_subparsers(dest="command")
+    init_parser = subparsers.add_parser("init")
+    init_parser.add_argument("root", type=Path)
+    init_parser.add_argument("--project-id", required=True)
+    init_parser.add_argument("--title", required=True)
     return parser
 
 
 def main(argv=None):
-    build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.command == "init":
+        try:
+            print(initialize(args.root, args.project_id, args.title))
+        except FileExistsError as error:
+            parser.error(str(error))
     return 0
 
 

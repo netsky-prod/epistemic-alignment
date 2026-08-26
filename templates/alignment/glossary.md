@@ -1,0 +1,4 @@
+---
+{"artifact":"glossary","entities":[]}
+---
+# Glossary
