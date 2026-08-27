@@ -46,6 +46,11 @@ def _normalized_text(path: Path) -> bytes:
     return content.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
 
 
+def _update_length_prefixed(digest, value: bytes) -> None:
+    digest.update(len(value).to_bytes(8, byteorder="big"))
+    digest.update(value)
+
+
 def create_snapshot(alignment_dir: Path) -> Snapshot:
     dossier = load_dossier(alignment_dir)
     paths = _safe_paths(dossier.root, dossier.snapshot_paths)
@@ -55,12 +60,14 @@ def create_snapshot(alignment_dir: Path) -> Snapshot:
         "snapshot_paths": paths,
     }
     digest = hashlib.sha256()
-    digest.update(json.dumps(header, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
-    digest.update(b"\0")
+    _update_length_prefixed(
+        digest,
+        json.dumps(header, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+    )
     root = dossier.root.resolve()
     for path in paths:
-        digest.update(path.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(_normalized_text((root / PurePosixPath(path)).resolve()))
-        digest.update(b"\0")
+        _update_length_prefixed(digest, path.encode("utf-8"))
+        _update_length_prefixed(
+            digest, _normalized_text((root / PurePosixPath(path)).resolve())
+        )
     return Snapshot(algorithm="sha256-v1", digest=digest.hexdigest(), paths=paths)

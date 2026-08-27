@@ -45,6 +45,19 @@ class SnapshotTests(unittest.TestCase):
             )
             self.assertNotEqual(before, create_snapshot(target).digest)
 
+    def test_content_cannot_imitate_path_boundaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            left = self.copy_dossier(Path(directory) / "left")
+            right = self.copy_dossier(Path(directory) / "right")
+            for target, first, second in (
+                (left, "X", "Y\0b\0Z"),
+                (right, "X\0b\0Y", "Z"),
+            ):
+                self.replace_snapshot_paths(target, ["a", "b"])
+                (target / "a").write_text(first, encoding="utf-8")
+                (target / "b").write_text(second, encoding="utf-8")
+            self.assertNotEqual(create_snapshot(left).digest, create_snapshot(right).digest)
+
     def test_unsafe_duplicate_missing_and_non_file_paths_fail_closed(self):
         invalid_paths = [
             ["../secret"],
