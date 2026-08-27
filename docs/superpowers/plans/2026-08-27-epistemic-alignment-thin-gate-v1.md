@@ -45,7 +45,7 @@ src/epistemic_alignment/
   cli.py          init/snapshot/issue-review/decide/check/handoff commands
 templates/alignment/                 Human-readable dossier templates
 skills/{align-project,...}/          Eight portable method skills
-skills/shared/references/            Cockburn, BDD, C4, review, gate, adapters
+references/                          Cockburn, BDD, C4, review, gate, adapters
 adapters/codex-site/template/        Presentational Sites application
 adapters/*.md                         Cross-harness contract and road maps
 evals/                                Scenario cases and evidence
@@ -372,7 +372,7 @@ git commit -m "feat: gate handoff on an unchanged human-approved snapshot"
 - Create: `skills/review-alignment/SKILL.md`
 - Create: `skills/build-review/SKILL.md`
 - Create: `skills/approve-handoff/SKILL.md`
-- Create: `skills/shared/references/{artifact-contract,cockburn,bdd,c4,semantic-review,approval,platform-detection}.md`
+- Create: `references/{artifact-contract,cockburn,bdd,c4,semantic-review,approval,platform-detection}.md`
 - Create: `tests/test_skills.py`
 
 **Interfaces:**

@@ -9,16 +9,91 @@
     "marketplace_source_removed_before_helper_execution": true,
     "source_tree_pythonpath_used": false,
     "installed_skill_count": 8,
-    "verification": "python3 -m unittest tests.test_release.ReleaseTests.test_clean_install_uses_packaged_plugin_in_isolated_codex_home -v"
+    "verification": "python3 -m unittest tests.test_release.ReleaseTests.test_clean_install_uses_packaged_plugin_in_isolated_codex_home -v",
+    "mechanical_flow": {
+      "fixture_source": "examples/approved-project",
+      "command_sequence": [
+        "snapshot",
+        "issue-review",
+        "decide",
+        "check",
+        "handoff",
+        "check"
+      ],
+      "verified_artifacts": [
+        "alignment/manifest.yaml",
+        "alignment/charter.md",
+        "alignment/stakeholders.md",
+        "alignment/glossary.md",
+        "alignment/assumptions.md",
+        "alignment/open-questions.md",
+        "alignment/use-cases/UC-001.md",
+        "alignment/features/release-handoff.feature",
+        "alignment/architecture/context.md",
+        "alignment/architecture/containers.md",
+        "alignment/architecture/components.md",
+        "alignment/decisions/ADR-001.md",
+        "alignment/review.md",
+        "alignment-review/site/.openai/hosting.json",
+        "alignment-review/site/app/page.tsx",
+        "alignment-review/site/components/C4Diagram.tsx",
+        "alignment-review/site/components/FindingsPanel.tsx",
+        "alignment-review/site/public/review.json",
+        "alignment-review/site/tests/rendered-html.test.mjs"
+      ],
+      "captured_outputs": {
+        "snapshot": {
+          "algorithm": "sha256-v1",
+          "digest": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+          "paths": [
+            "architecture/components.md",
+            "architecture/containers.md",
+            "architecture/context.md",
+            "assumptions.md",
+            "charter.md",
+            "decisions/ADR-001.md",
+            "features/release-handoff.feature",
+            "glossary.md",
+            "open-questions.md",
+            "review.md",
+            "stakeholders.md",
+            "use-cases/UC-001.md"
+          ]
+        },
+        "issue_review": "sha256-v1:6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+        "decision": "decision recorded",
+        "check_before_handoff": {
+          "digest": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+          "ready": true,
+          "reasons": []
+        },
+        "handoff": "alignment/handoff.md",
+        "check_after_handoff": {
+          "digest": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+          "ready": true,
+          "reasons": []
+        }
+      }
+    }
   },
   "site_presented": true,
   "site_location": "examples/approved-project/alignment-review/site",
   "site_test": "pnpm --dir examples/approved-project/alignment-review/site test",
   "visual_qa": {
-    "desktop": "artifacts/release/site-desktop.png",
-    "desktop_viewport": "1440x1000",
-    "narrow": "artifacts/release/site-narrow.png",
-    "narrow_viewport": "390x844"
+    "desktop": {
+      "path": "artifacts/release/site-desktop.png",
+      "png_pixels": {
+        "width": 1425,
+        "height": 990
+      }
+    },
+    "narrow": {
+      "path": "artifacts/release/site-narrow.png",
+      "png_pixels": {
+        "width": 375,
+        "height": 812
+      }
+    }
   },
   "human_approved": true,
   "decision": {
@@ -34,9 +109,12 @@
   "approved_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
   "handoff_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
   "gate_ready": true,
-  "superpowers_handoff_consumed": true,
   "superpowers_consumption": {
+    "status": "consumed",
     "skill": "superpowers:brainstorming",
+    "evidence_path": "artifacts/release/superpowers-intake.md",
+    "evidence_sha256": "de260f0c5e7689e270ca1afe822fd7d4b12fccd6ea0ff9fd5b0f5a76c01f1ee9",
+    "consumed_source_count": 15,
     "required_context": [
       "examples/approved-project/alignment/handoff.md",
       "examples/approved-project/alignment/"
@@ -49,6 +127,7 @@
   "notes": [
     "The Site payload, issued review, desktop capture, and narrow capture represent the same current snapshot.",
     "The human stakeholder explicitly approved the current issued digest and acknowledged FINDING-001 in the host conversation.",
-    "The helper generated the handoff after a ready check, and Superpowers brainstorming consumed it with the dossier as required context."
+    "The helper generated the handoff after a ready check, and Superpowers brainstorming consumed it with the dossier as required context.",
+    "Artifact presence and hash-continuity checks are mechanical evidence, not automated semantic proof."
   ]
 }

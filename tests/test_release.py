@@ -1,6 +1,9 @@
+import hashlib
 import json
 import os
+import re
 import shutil
+import struct
 import subprocess
 import tempfile
 import unittest
@@ -20,6 +23,43 @@ PACKAGE_PATHS = (
     "src",
     "templates",
 )
+APPROVED_EXAMPLE = ROOT / "examples/approved-project"
+APPROVED_DIGEST = "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077"
+APPROVED_FINDING = "FINDING-001"
+EXPECTED_SKILLS = [
+    "align-project",
+    "approve-handoff",
+    "build-review",
+    "discover-domain",
+    "model-architecture",
+    "review-alignment",
+    "specify-behavior",
+    "write-use-cases",
+]
+REQUIRED_WORKFLOW_ARTIFACTS = (
+    "alignment/manifest.yaml",
+    "alignment/charter.md",
+    "alignment/stakeholders.md",
+    "alignment/glossary.md",
+    "alignment/assumptions.md",
+    "alignment/open-questions.md",
+    "alignment/use-cases/UC-001.md",
+    "alignment/features/release-handoff.feature",
+    "alignment/architecture/context.md",
+    "alignment/architecture/containers.md",
+    "alignment/architecture/components.md",
+    "alignment/decisions/ADR-001.md",
+    "alignment/review.md",
+    "alignment-review/site/.openai/hosting.json",
+    "alignment-review/site/app/page.tsx",
+    "alignment-review/site/components/C4Diagram.tsx",
+    "alignment-review/site/components/FindingsPanel.tsx",
+    "alignment-review/site/public/review.json",
+    "alignment-review/site/tests/rendered-html.test.mjs",
+)
+INTAKE_ROW = re.compile(
+    r"^\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|$"
+)
 
 
 def run(*args, cwd=None, env=None):
@@ -30,6 +70,17 @@ def run(*args, cwd=None, env=None):
         text=True,
         capture_output=True,
     )
+
+
+def sha256(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def png_dimensions(path):
+    data = path.read_bytes()[:24]
+    if len(data) != 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+        raise AssertionError(f"not a PNG with an IHDR chunk: {path}")
+    return struct.unpack(">II", data[16:24])
 
 
 class ReleaseTests(unittest.TestCase):
@@ -124,16 +175,7 @@ class ReleaseTests(unittest.TestCase):
             installed_plugin = manifests[0].parents[1]
             self.assertEqual(
                 sorted(path.parent.name for path in (installed_plugin / "skills").glob("*/SKILL.md")),
-                [
-                    "align-project",
-                    "approve-handoff",
-                    "build-review",
-                    "discover-domain",
-                    "model-architecture",
-                    "review-alignment",
-                    "specify-behavior",
-                    "write-use-cases",
-                ],
+                EXPECTED_SKILLS,
             )
 
             version = run(installed_plugin / "scripts/alignment", "--version", env=environment)
@@ -141,17 +183,32 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(version.stdout.strip(), "epistemic-alignment 0.1.0")
 
             fixture = temporary / "fixture"
-            initialized = run(
-                installed_plugin / "scripts/alignment",
-                "init",
-                fixture,
-                "--project-id",
-                "clean-install-e2e",
-                "--title",
-                "Clean Install E2E",
-                env=environment,
+            shutil.copytree(APPROVED_EXAMPLE / "alignment", fixture / "alignment")
+            shutil.copytree(
+                APPROVED_EXAMPLE / "alignment-review/site",
+                fixture / "alignment-review/site",
+                ignore=shutil.ignore_patterns(
+                    ".next", ".vinext", ".wrangler", "dist", "node_modules"
+                ),
             )
-            self.assertEqual(initialized.returncode, 0, initialized.stderr)
+            for relative_path in REQUIRED_WORKFLOW_ARTIFACTS:
+                with self.subTest(relative_path=relative_path):
+                    self.assertTrue((fixture / relative_path).is_file(), relative_path)
+
+            approved_state = json.loads((fixture / "alignment/review-state.json").read_text())
+            self.assertEqual(approved_state["snapshot"]["digest"], APPROVED_DIGEST)
+            self.assertEqual(approved_state["decision"]["decision"], "approved")
+            self.assertEqual(approved_state["decision"]["reviewer"], "human stakeholder")
+            self.assertEqual(approved_state["decision"]["provenance"], "human-message")
+            self.assertEqual(approved_state["decision"]["review_hash"], APPROVED_DIGEST)
+            self.assertEqual(
+                approved_state["decision"]["acknowledged_findings"], [APPROVED_FINDING]
+            )
+            site = json.loads(
+                (fixture / "alignment-review/site/public/review.json").read_text()
+            )
+            self.assertEqual(site["snapshot"]["digest"], APPROVED_DIGEST)
+
             snapshot = run(
                 installed_plugin / "scripts/alignment",
                 "snapshot",
@@ -160,7 +217,88 @@ class ReleaseTests(unittest.TestCase):
                 env=environment,
             )
             self.assertEqual(snapshot.returncode, 0, snapshot.stderr)
-            self.assertEqual(json.loads(snapshot.stdout)["algorithm"], "sha256-v1")
+            snapshot_output = json.loads(snapshot.stdout)
+            self.assertEqual(snapshot_output["digest"], APPROVED_DIGEST)
+
+            issue = run(
+                installed_plugin / "scripts/alignment",
+                "issue-review",
+                fixture,
+                "--adapter",
+                "codex-sites",
+                "--status",
+                "presented",
+                "--location",
+                "alignment-review/site",
+                env=environment,
+            )
+            self.assertEqual(issue.returncode, 0, issue.stderr)
+
+            decide = run(
+                installed_plugin / "scripts/alignment",
+                "decide",
+                fixture,
+                "--decision",
+                "approved",
+                "--reviewer",
+                "human stakeholder",
+                "--provenance",
+                "human-message",
+                "--review-hash",
+                APPROVED_DIGEST,
+                "--acknowledged-finding",
+                APPROVED_FINDING,
+                env=environment,
+            )
+            self.assertEqual(decide.returncode, 0, decide.stderr)
+
+            check_before_handoff = run(
+                installed_plugin / "scripts/alignment", "check", fixture, "--json", env=environment
+            )
+            self.assertEqual(check_before_handoff.returncode, 0, check_before_handoff.stderr)
+            check_before_handoff_output = json.loads(check_before_handoff.stdout)
+            self.assertTrue(check_before_handoff_output["ready"])
+
+            handoff = run(
+                installed_plugin / "scripts/alignment", "handoff", fixture, env=environment
+            )
+            self.assertEqual(handoff.returncode, 0, handoff.stderr)
+            handoff_path = Path(handoff.stdout.strip())
+            self.assertEqual(handoff_path, fixture / "alignment/handoff.md")
+            self.assertIn(
+                f"Approved snapshot: sha256-v1:{APPROVED_DIGEST}", handoff_path.read_text()
+            )
+            self.assertIn("superpowers:brainstorming", handoff_path.read_text())
+
+            check_after_handoff = run(
+                installed_plugin / "scripts/alignment", "check", fixture, "--json", env=environment
+            )
+            self.assertEqual(check_after_handoff.returncode, 0, check_after_handoff.stderr)
+            check_after_handoff_output = json.loads(check_after_handoff.stdout)
+            self.assertTrue(check_after_handoff_output["ready"])
+
+            captured_outputs = {
+                "snapshot": snapshot_output,
+                "issue_review": issue.stdout.strip(),
+                "decision": decide.stdout.strip(),
+                "check_before_handoff": check_before_handoff_output,
+                "handoff": str(handoff_path.relative_to(fixture)),
+                "check_after_handoff": check_after_handoff_output,
+            }
+            evidence = json.loads((ROOT / "artifacts/release/e2e.json").read_text())
+            mechanical_flow = evidence["clean_install"]["mechanical_flow"]
+            self.assertEqual(mechanical_flow["fixture_source"], "examples/approved-project")
+            self.assertEqual(
+                mechanical_flow["command_sequence"],
+                ["snapshot", "issue-review", "decide", "check", "handoff", "check"],
+            )
+            self.assertEqual(
+                mechanical_flow["verified_artifacts"], list(REQUIRED_WORKFLOW_ARTIFACTS)
+            )
+            self.assertEqual(
+                captured_outputs,
+                mechanical_flow["captured_outputs"],
+            )
 
     def test_release_evidence_binds_presented_site_to_approved_handoff(self):
         evidence = json.loads((ROOT / "artifacts/release/e2e.json").read_text())
@@ -168,10 +306,8 @@ class ReleaseTests(unittest.TestCase):
             evidence["human_approved"],
             "release example awaits an explicit human approval of its issued hash",
         )
-        self.assertTrue(
-            evidence["superpowers_handoff_consumed"],
-            "release example awaits a helper-generated handoff and Superpowers consumption",
-        )
+        self.assertNotIn("superpowers_handoff_consumed", evidence)
+        self.assertEqual(evidence["superpowers_consumption"]["status"], "consumed")
         alignment = ROOT / "examples/approved-project/alignment"
         state = json.loads((alignment / "review-state.json").read_text())
         site = json.loads(
@@ -202,12 +338,40 @@ class ReleaseTests(unittest.TestCase):
         handoff = (alignment / "handoff.md").read_text()
         self.assertIn(f"Approved snapshot: sha256-v1:{current_hash}", handoff)
 
-    def test_release_screenshots_exist(self):
-        for name in ["site-desktop.png", "site-narrow.png"]:
+    def test_superpowers_intake_hashes_match_current_consumed_files(self):
+        evidence = json.loads((ROOT / "artifacts/release/e2e.json").read_text())
+        consumption = evidence["superpowers_consumption"]
+        intake = ROOT / consumption["evidence_path"]
+        self.assertEqual(sha256(intake), consumption["evidence_sha256"])
+
+        rows = []
+        for line in intake.read_text().splitlines():
+            match = INTAKE_ROW.match(line)
+            if match:
+                rows.append((int(match.group(1)), match.group(2), match.group(3)))
+        self.assertEqual([order for order, _, _ in rows], list(range(1, len(rows) + 1)))
+        self.assertEqual(len(rows), consumption["consumed_source_count"])
+        self.assertGreater(len(rows), 0)
+
+        for _, relative_path, expected_hash in rows:
+            with self.subTest(relative_path=relative_path):
+                source = (ROOT / relative_path).resolve()
+                source.relative_to(ROOT.resolve())
+                self.assertTrue(source.is_file(), relative_path)
+                self.assertEqual(sha256(source), expected_hash)
+
+    def test_release_screenshot_metadata_matches_png_dimensions(self):
+        evidence = json.loads((ROOT / "artifacts/release/e2e.json").read_text())
+        for name in ["desktop", "narrow"]:
             with self.subTest(name=name):
-                screenshot = ROOT / "artifacts/release" / name
+                screenshot_evidence = evidence["visual_qa"][name]
+                screenshot = ROOT / screenshot_evidence["path"]
                 self.assertTrue(screenshot.is_file(), name)
                 self.assertGreater(screenshot.stat().st_size, 10_000, name)
+                width, height = png_dimensions(screenshot)
+                self.assertEqual(
+                    screenshot_evidence["png_pixels"], {"width": width, "height": height}
+                )
 
 
 if __name__ == "__main__":

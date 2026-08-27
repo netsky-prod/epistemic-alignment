@@ -65,9 +65,17 @@ See [usage](docs/usage.md) for the phase outputs and gate protocol,
 
 ## Verification
 
+The plugin helper itself has no third-party runtime dependencies. The
+plugin-creator validator separately imports PyYAML, so run it from a dedicated,
+pinned validator environment:
+
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests -v
-python3 /Users/darasokolovskaa/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
+validator_venv="$HOME/.cache/epistemic-alignment/plugin-validator-pyyaml-6.0.2"
+python3 -m venv "$validator_venv"
+"$validator_venv/bin/python" -m pip install --disable-pip-version-check "PyYAML==6.0.2"
+"$validator_venv/bin/python" \
+  /Users/darasokolovskaa/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
 scripts/alignment snapshot examples/approved-project --json
 scripts/alignment check examples/approved-project --json
 pnpm --dir examples/approved-project/alignment-review/site test

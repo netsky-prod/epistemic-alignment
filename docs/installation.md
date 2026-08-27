@@ -4,8 +4,20 @@
 
 - Codex desktop with the `codex` CLI available.
 - Python 3.9 or newer. The alignment helper uses only the standard library.
+- PyYAML 6.0.2 in a separate virtual environment for the plugin-creator
+  validator only; it is not a plugin runtime dependency.
 - Superpowers installed for the post-approval implementation handoff.
 - Node 22.13 or newer and pnpm 11.19 when building the Codex review Site.
+
+Create the reusable validator environment before installing or validating the
+plugin. Pinning PyYAML makes the documented validator command reproducible and
+keeps the plugin's dependency-free helper environment unchanged.
+
+```sh
+validator_venv="$HOME/.cache/epistemic-alignment/plugin-validator-pyyaml-6.0.2"
+python3 -m venv "$validator_venv"
+"$validator_venv/bin/python" -m pip install --disable-pip-version-check "PyYAML==6.0.2"
+```
 
 ## Local personal installation
 
@@ -15,11 +27,12 @@ Codex configuration by hand.
 
 ```sh
 PLUGIN_CREATOR="$HOME/.codex/skills/.system/plugin-creator"
+validator_python="$HOME/.cache/epistemic-alignment/plugin-validator-pyyaml-6.0.2/bin/python"
 mkdir -p "$HOME/plugins"
 python3 "$PLUGIN_CREATOR/scripts/create_basic_plugin.py" alignment \
   --path "$HOME/plugins" --with-marketplace
 cp -R ./. "$HOME/plugins/alignment/"
-python3 "$PLUGIN_CREATOR/scripts/validate_plugin.py" "$HOME/plugins/alignment"
+"$validator_python" "$PLUGIN_CREATOR/scripts/validate_plugin.py" "$HOME/plugins/alignment"
 MARKETPLACE_NAME=$(python3 "$PLUGIN_CREATOR/scripts/read_marketplace_name.py")
 codex plugin add "alignment@$MARKETPLACE_NAME"
 ```
@@ -41,10 +54,11 @@ the base version and replaces the single `+codex.<token>` suffix.
 
 ```sh
 PLUGIN_CREATOR="$HOME/.codex/skills/.system/plugin-creator"
+validator_python="$HOME/.cache/epistemic-alignment/plugin-validator-pyyaml-6.0.2/bin/python"
 cp -R ./. "$HOME/plugins/alignment/"
 python3 "$PLUGIN_CREATOR/scripts/update_plugin_cachebuster.py" \
   "$HOME/plugins/alignment"
-python3 "$PLUGIN_CREATOR/scripts/validate_plugin.py" "$HOME/plugins/alignment"
+"$validator_python" "$PLUGIN_CREATOR/scripts/validate_plugin.py" "$HOME/plugins/alignment"
 MARKETPLACE_NAME=$(python3 "$PLUGIN_CREATOR/scripts/read_marketplace_name.py")
 codex plugin add "alignment@$MARKETPLACE_NAME"
 ```
@@ -71,6 +85,10 @@ directory as part of plugin removal.
 
 `tests/test_release.py` creates a temporary marketplace with the plugin-creator
 helper, installs through `codex plugin add` into a temporary `CODEX_HOME`,
-removes the marketplace source, and runs the installed helper from Codex's
-cache with `PYTHONPATH` unset. It does not modify the personal marketplace or
-publish anything.
+removes the marketplace source, copies the approved dossier and Site into an
+isolated fixture, and runs snapshot, issuance, the recorded human decision,
+gate checks, and handoff through the installed helper in Codex's cache with
+`PYTHONPATH` unset. The test binds the captured command outputs to
+`artifacts/release/e2e.json`; its Cockburn, BDD, C4, review, and Site checks
+prove artifact presence and hash continuity only, not semantic correctness. It
+does not modify the personal marketplace or publish anything.
