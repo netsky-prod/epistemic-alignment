@@ -21,6 +21,13 @@ reports the local draft URL using Qwen Code's supported extension mechanism,
 and returns standard adapter output. The host installation details are future
 work pending validation of that extension mechanism.
 
+## Capability check and fallback
+
+The future extension first requires `host_capabilities.local_static_preview ==
+true`. There is no permitted fallback within the Qwen Code local-static path.
+If the predicate is false, it returns the standard `failed` result (null
+location/rendered hash plus a warning) and does not call `issue-review`.
+
 ## Planned preview
 
 After the shared future renderer writes `<project>/alignment-review/static/`:

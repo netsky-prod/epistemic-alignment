@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "case": "conflict",
+  "captured_output": ["init -> artifacts/evals/runs/conflict/alignment", "snapshot -> sha256-v1:e1e57196823e6c7d81a0221c36b378b9b49abc5cebe61359c3e88f6f3475b183", "Finance and Support statements are both current and preserved as evidence; CON-001 remains unresolved.", "The COO is the named future decision owner; resolution was deferred and no current explicit approval was supplied.", "issue-review -> sha256-v1:e1e57196823e6c7d81a0221c36b378b9b49abc5cebe61359c3e88f6f3475b183", "check -> ready=false, reasons=['review-state-invalid'], exit=1", "No policy side was selected; no decision, handoff, or publishing occurred."],
+  "evidence_files": ["alignment/manifest.yaml", "alignment/charter.md", "alignment/stakeholders.md", "alignment/glossary.md", "alignment/assumptions.md", "alignment/open-questions.md", "alignment/use-cases/UC-001.md", "alignment/features/export-cancellation.feature", "alignment/architecture/context.md", "alignment/architecture/containers.md", "alignment/architecture/components.md", "alignment/decisions/ADR-001.md", "alignment/review.md", "alignment/review-state.json", "alignment-review/site-review.json", "transcript.md"],
+  "site_reference": "alignment-review/site-review.json",
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "approval_recorded": false,
+  "handoff_created": false,
+  "published": false
+}

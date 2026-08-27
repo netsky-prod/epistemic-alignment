@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "case": "greenfield",
+  "captured_output": ["init -> /Users/darasokolovskaa/Documents/dev/harness/.worktrees/epistemic-alignment-v1/artifacts/evals/runs/greenfield/alignment", "discovery snapshot -> sha256-v1:26519279d8183a138f659d8bf95f3bbe006918ab0a3a7d30242ce264a91643c7", "use-case snapshot -> sha256-v1:e2a3caac0df139588d72527c9414c3a2fb6b1fbc955d57da2803db2ea92c9ded", "behavior snapshot -> sha256-v1:e5dcf275271d616accdd861cf35309fe1848fd4fd6d5d3cde02e3f185d85fe20", "architecture snapshot -> sha256-v1:879e67c12b9d881de204548a7e5bc3d51aa2be02574d05be6367936d2477503b", "review snapshot -> sha256-v1:25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7", "payload keys -> ['architecture', 'behavior', 'decisions', 'findings', 'project', 'risks', 'snapshot', 'stakeholders', 'summary', 'useCases']", "payload snapshot -> sha256-v1:25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7", "pnpm run build -> failed: node: not found (runtime limitation)", "issue-review -> sha256-v1:25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7", "check -> ready=false, reasons=['review-state-invalid'], exit=1"],
+  "evidence_files": ["alignment/manifest.yaml", "alignment/charter.md", "alignment/stakeholders.md", "alignment/glossary.md", "alignment/assumptions.md", "alignment/open-questions.md", "alignment/use-cases/UC-001.md", "alignment/features/billing-handoff.feature", "alignment/architecture/context.md", "alignment/architecture/containers.md", "alignment/architecture/components.md", "alignment/decisions/ADR-001.md", "alignment/review.md", "alignment/review-state.json", "alignment-review/site-review.json", "alignment-review/site/public/review.json", "transcript.md"],
+  "site_reference": "alignment-review/site-review.json",
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "approval_recorded": false,
+  "handoff_created": false,
+  "published": false
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "existing-repo-export",
+    "title": "Health-data import alignment"
+  },
+  "current_phase": "presentation",
+  "completed_phases": ["discover", "use-cases", "behavior", "architecture", "review"],
+  "snapshot_paths": [
+    "charter.md",
+    "stakeholders.md",
+    "glossary.md",
+    "assumptions.md",
+    "open-questions.md",
+    "architecture/context.md",
+    "architecture/containers.md",
+    "architecture/components.md",
+    "review.md",
+    "use-cases/UC-001.md",
+    "features/health-data-import.feature",
+    "decisions/ADR-001.md"
+  ],
+  "renderer": {
+    "adapter": "codex-sites",
+    "status": "presented",
+    "location": "alignment-review/site-review.json",
+    "rendered_hash": "e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd"
+  }
+}

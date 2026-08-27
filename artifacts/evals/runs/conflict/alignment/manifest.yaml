@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "conflict-export",
+    "title": "Irreversible export and cancellation alignment"
+  },
+  "current_phase": "presentation",
+  "completed_phases": ["discover", "use-cases", "behavior", "architecture", "review"],
+  "snapshot_paths": [
+    "charter.md",
+    "stakeholders.md",
+    "glossary.md",
+    "assumptions.md",
+    "open-questions.md",
+    "architecture/context.md",
+    "architecture/containers.md",
+    "architecture/components.md",
+    "review.md",
+    "use-cases/UC-001.md",
+    "features/export-cancellation.feature",
+    "decisions/ADR-001.md"
+  ],
+  "renderer": {
+    "adapter": null,
+    "status": "not_generated",
+    "location": null,
+    "rendered_hash": null
+  }
+}

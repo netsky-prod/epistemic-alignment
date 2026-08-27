@@ -15,5 +15,13 @@ implement later without changing the canonical dossier or thin gate.
 5. Test draft and presented states using static fixtures before any host
    installation or publishing workflow is proposed.
 
+## Capability check and fallback
+
+Before invoking the future Artifact entry point, require
+`host_capabilities.artifact == true`. There is no permitted fallback for the
+Claude Artifact path in v1. If it is unavailable, return the contract's
+`failed` result with null location/rendered hash and a warning; do not call
+`issue-review`.
+
 The host conversation remains the place for an explicit human decision; the
 existing helper remains the only gate writer.

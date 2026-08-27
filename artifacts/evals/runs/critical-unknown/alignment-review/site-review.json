@@ -1,0 +1,60 @@
+{
+  "project": {
+    "id": "critical-unknown-import",
+    "title": "Health-data import alignment (critical unknown)",
+    "source": "derived from canonical alignment dossier"
+  },
+  "summary": {
+    "goal": "Plan a health-data import for stakeholder review before implementation planning.",
+    "status": "draft/reference",
+    "facts": [
+      "The requested outcome is a health-data import plan (FACT-001).",
+      "The retention policy is explicitly unknown (STMT-002)."
+    ],
+    "proposal": "Import valid, authorized health data only under a human-confirmed retention policy.",
+    "gate": "blocked: critical retention decision unresolved and no handoff approval"
+  },
+  "stakeholders": [
+    {"id":"STMT-001","label":"Requesting human / product stakeholder","statement":"Wants a plan for importing health data; no handoff approval supplied.","status":"confirmed"},
+    {"id":"STMT-002","label":"Requesting human","statement":"Retention policy is explicitly unknown.","status":"confirmed uncertainty"},
+    {"id":"STMT-003","label":"Policy/data-governance owner","statement":"Will decide the retention policy later; decision has not been supplied.","status":"decision pending"},
+    {"id":"STMT-004","label":"Requesting human","statement":"Does not approve a handoff at this time.","status":"confirmed constraint"},
+    {"id":"INFER-001","label":"Privacy/security reviewers","statement":"Likely stakeholders because health data is sensitive; inference requires confirmation.","status":"proposed"}
+  ],
+  "useCases": [
+    {"id":"UC-001","title":"Import health data into the product","path":"alignment/use-cases/UC-001.md","status":"proposed"}
+  ],
+  "behavior": [
+    {"id":"SCN-001","title":"Authorized valid import under confirmed retention policy","path":"alignment/features/health-data-import.feature","status":"proposed"},
+    {"id":"SCN-002","title":"Import pauses when retention policy is unknown","path":"alignment/features/health-data-import.feature","status":"proposed","risk":"blocker"},
+    {"id":"SCN-003","title":"Invalid source is recoverable","path":"alignment/features/health-data-import.feature","status":"proposed"}
+  ],
+  "architecture": {
+    "views": [
+      {"title":"System context","path":"alignment/architecture/context.md","status":"proposed"},
+      {"title":"Container view","path":"alignment/architecture/containers.md","status":"proposed"},
+      {"title":"Component view","path":"alignment/architecture/components.md","status":"proposed"}
+    ],
+    "fallback":"C4 Mermaid source and responsibility tables are available in each referenced Markdown file."
+  },
+  "decisions": [
+    {"id":"ADR-001","title":"Require explicit retention policy before durable persistence","path":"alignment/decisions/ADR-001.md","status":"proposed"}
+  ],
+  "risks": [
+    {"id":"UQ-001","label":"Retention policy","impact":"Cannot define safe durable storage, deletion, exceptions, or audit lifecycle.","status":"blocker","owner":"Policy/data-governance owner"},
+    {"id":"UQ-002","label":"Source and validation boundary","impact":"Proposed success criteria lack a concrete source contract.","status":"open","owner":"Product/data owner"},
+    {"id":"UQ-003","label":"Consent and access","impact":"Authorization, consent, access, and audit constraints are not agreed.","status":"open","owner":"Product/privacy/security owners"}
+  ],
+  "findings": [
+    {"id":"F-001","title":"Retention policy is a critical unresolved human decision","path":"alignment/review.md#F-001","disposition":"open","impact":"blocker"},
+    {"id":"F-002","title":"Source and authorization boundaries are unspecified","path":"alignment/review.md#F-002","disposition":"open","impact":"material"},
+    {"id":"F-003","title":"Architecture and acceptance criteria remain proposals","path":"alignment/review.md#F-003","disposition":"open","impact":"material"},
+    {"id":"F-004","title":"No approval or handoff authorization exists","path":"alignment/review.md#F-004","disposition":"accepted","impact":"constraint"}
+  ],
+  "snapshot": {
+    "algorithm":"sha256-v1",
+    "digest":"013f82ad21af23e4d9bc9990828464089e3a0228e44dff30eca4aa6889720a9e",
+    "paths":["architecture/components.md","architecture/containers.md","architecture/context.md","assumptions.md","charter.md","decisions/ADR-001.md","features/health-data-import.feature","glossary.md","open-questions.md","review.md","stakeholders.md","use-cases/UC-001.md"],
+    "status":"draft/reference; presented for review only; not published, approved, or handed off"
+  }
+}

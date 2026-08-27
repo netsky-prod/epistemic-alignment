@@ -1,0 +1,71 @@
+{
+  "project": {
+    "id": "existing-repo-export",
+    "title": "Health-data import alignment",
+    "source": "derived from canonical alignment dossier"
+  },
+  "summary": {
+    "goal": "Align the proposed health-data import with stakeholders before implementation planning.",
+    "status": "draft",
+    "facts": [
+      "Current importer accepts CSV (FACT-001).",
+      "Current records are stored for 30 days (FACT-002)."
+    ],
+    "proposal": "Health-data import with policy-bound persistence (STMT-001; proposed).",
+    "gate": "blocked: retention unresolved and no current explicit approval"
+  },
+  "stakeholders": [
+    {"id": "STMT-001", "label": "Product stakeholder", "statement": "Confirmed the health-data import outcome; did not approve the dossier.", "status": "confirmed"},
+    {"id": "STMT-002", "label": "Policy/data-governance owner", "statement": "Retention remains open; must decide UQ-001.", "status": "uncertain"},
+    {"id": "INFER-001", "label": "Privacy/security stakeholders", "statement": "Likely need review because health data is sensitive; inference to validate.", "status": "proposed"}
+  ],
+  "useCases": [
+    {"id": "UC-001", "title": "Import health data into the product", "path": "alignment/use-cases/UC-001.md", "status": "proposed"}
+  ],
+  "behavior": [
+    {"id": "SCN-001", "title": "Authorized import under confirmed policy", "path": "alignment/features/health-data-import.feature", "status": "proposed"},
+    {"id": "SCN-002", "title": "Retention policy unresolved", "path": "alignment/features/health-data-import.feature", "status": "proposed", "risk": "blocker"},
+    {"id": "SCN-003", "title": "Invalid source is recoverable", "path": "alignment/features/health-data-import.feature", "status": "proposed"}
+  ],
+  "architecture": {
+    "views": [
+      {"title": "System context", "path": "alignment/architecture/context.md", "status": "proposed"},
+      {"title": "Container view", "path": "alignment/architecture/containers.md", "status": "proposed"},
+      {"title": "Component view", "path": "alignment/architecture/components.md", "status": "proposed"}
+    ],
+    "fallback": "C4 Mermaid source is available in each referenced Markdown file."
+  },
+  "decisions": [
+    {"id": "ADR-001", "title": "Require explicit retention policy before persistence", "path": "alignment/decisions/ADR-001.md", "status": "proposed"}
+  ],
+  "risks": [
+    {"id": "UQ-001", "label": "Retention policy", "impact": "Cannot define safe durable storage or deletion behavior.", "status": "blocker", "owner": "Policy/data-governance owner"},
+    {"id": "UQ-002", "label": "Source format and validation", "impact": "Success criteria lack a concrete source contract.", "status": "open", "owner": "Product/data owner"},
+    {"id": "UQ-003", "label": "Consent and access", "impact": "Authorization and audit constraints are not agreed.", "status": "open", "owner": "Privacy/security owner"}
+  ],
+  "findings": [
+    {"id": "F-001", "title": "Health-data retention is unresolved", "path": "alignment/review.md#F-001", "disposition": "open", "impact": "blocker"},
+    {"id": "F-002", "title": "Source and validation boundary lacks scope", "path": "alignment/review.md#F-002", "disposition": "open", "impact": "material"},
+    {"id": "F-003", "title": "Current facts remain separate from proposal", "path": "alignment/review.md#F-003", "disposition": "accepted", "impact": "constraint"},
+    {"id": "F-004", "title": "Architecture responsibility is proposed", "path": "alignment/review.md#F-004", "disposition": "open", "impact": "material"}
+  ],
+  "snapshot": {
+    "algorithm": "sha256-v1",
+    "digest": "e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd",
+    "paths": [
+      "architecture/components.md",
+      "architecture/containers.md",
+      "architecture/context.md",
+      "assumptions.md",
+      "charter.md",
+      "decisions/ADR-001.md",
+      "features/health-data-import.feature",
+      "glossary.md",
+      "open-questions.md",
+      "review.md",
+      "stakeholders.md",
+      "use-cases/UC-001.md"
+    ],
+    "status": "draft/reference; presented for review only; not published, approved, or handed off"
+  }
+}

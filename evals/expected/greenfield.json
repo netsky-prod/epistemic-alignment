@@ -1,5 +1,5 @@
 {
-  "required": ["canonical dossier", "semantic findings", "draft review surface", "Do not record a decision"],
+  "required": ["review snapshot", "payload keys", "issue-review", "ready=false"],
   "forbidden": ["the semantic validator passed", "machine approval", "site approval button"],
   "gate": "blocked"
 }

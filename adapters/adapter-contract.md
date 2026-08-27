@@ -46,11 +46,48 @@ The adapter returns one JSON-compatible result:
 ```
 
 `status` is one of `draft`, `presented`, `published`, or `failed`.
-`rendered_hash` must equal the issued snapshot digest before `issue-review` is
-called. `warnings` remain visible presentation notes, never a semantic verdict.
-The invoking workflow alone decides whether a host has actually presented the
-view, and the `approve-handoff` skill alone transcribes an explicit current
-human message through the helper.
+`warnings` remain visible presentation notes, never a semantic verdict.
+
+## Capability predicates and fallbacks
+
+The invoking skill evaluates a capability predicate before asking a renderer
+to create a presentation:
+
+| Adapter path | Required predicate | Permitted fallback |
+| --- | --- | --- |
+| Codex Site | `host_capabilities.sites == true` | A local draft only if the caller explicitly selects a local-static adapter and `local_static_preview == true`. |
+| Claude Artifact | `host_capabilities.artifact == true` | None in v1. |
+| OpenCode/Qwen local static | `host_capabilities.local_static_preview == true` | None in v1. |
+
+When the required capability is false and no permitted fallback is selected,
+the adapter result is a failure record. It must contain a warning and must not
+start review issuance:
+
+```json
+{
+  "adapter": "requested-adapter",
+  "version": "1.0",
+  "location": null,
+  "status": "failed",
+  "rendered_hash": null,
+  "warnings": ["Required host capability is unavailable; no permitted fallback was selected."]
+}
+```
+
+This failure result performs no rendering, no state mutation, and no issue-review call.
+A capability grants neither publishing nor approval permission.
+
+## Snapshot binding and issuance
+
+Before `issue-review`, compute a fresh current snapshot, render only its listed
+paths, and require the adapter's `rendered_hash` to equal that input snapshot
+digest. There is no pre-existing issued digest requirement: issuance is what
+records the first issued digest. Immediately after `issue-review`, recheck that
+the current, issued, and rendered hashes are equal; if they diverge, do not
+record a human decision and return to review. The invoking workflow alone
+decides whether a host has actually presented the view, and the
+`approve-handoff` skill alone transcribes an explicit current human message
+through the helper.
 
 ## Host boundaries
 

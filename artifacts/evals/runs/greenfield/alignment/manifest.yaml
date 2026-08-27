@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "billing-handoff-greenfield",
+    "title": "Greenfield Billing Handoff Alignment"
+  },
+  "current_phase": "approval",
+  "completed_phases": ["discover", "use-cases", "behavior", "architecture", "review", "presentation"],
+  "snapshot_paths": [
+    "charter.md",
+    "stakeholders.md",
+    "glossary.md",
+    "assumptions.md",
+    "open-questions.md",
+    "architecture/context.md",
+    "architecture/containers.md",
+    "architecture/components.md",
+    "review.md"
+    ,"use-cases/UC-001.md",
+    "features/billing-handoff.feature",
+    "decisions/ADR-001.md"
+  ],
+  "renderer": {
+    "adapter": "codex-sites",
+    "status": "presented",
+    "location": "alignment-review/site",
+    "rendered_hash": "25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7"
+  }
+}

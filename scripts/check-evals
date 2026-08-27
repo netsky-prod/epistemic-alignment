@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Validate the checked-in scenario corpus and replay deterministic gate fixtures."""
+"""Validate checked-in alignment eval evidence and replay thin-gate fixtures."""
 
 import json
 import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from epistemic_alignment.approval import check_gate, issue_review, record_decision
 from epistemic_alignment.handoff import write_handoff
+from epistemic_alignment.snapshot import create_snapshot
 
 
 NAMES = {
@@ -25,7 +26,25 @@ NAMES = {
     "stale-approval",
     "self-approval",
 }
-DETERMINISTIC = {"stale-approval", "self-approval"}
+KINDS = {
+    "greenfield": "dossier-run",
+    "existing-repo": "dossier-run",
+    "conflict": "dossier-run",
+    "critical-unknown": "dossier-run",
+    "bounded-skip": "bounded-skip-run",
+    "stale-approval": "deterministic-fixture",
+    "self-approval": "deterministic-fixture",
+}
+DOSSIER_CASES = {"greenfield", "existing-repo", "conflict", "critical-unknown"}
+SITE_KEYS = {
+    "project", "summary", "stakeholders", "useCases", "behavior",
+    "architecture", "decisions", "risks", "findings", "snapshot",
+}
+RUN_KEYS = {
+    "schema_version", "case", "captured_output", "evidence_files",
+    "site_reference", "gate", "gate_reasons", "approval_recorded",
+    "handoff_created", "published",
+}
 
 
 def fail(message: str) -> None:
@@ -39,10 +58,50 @@ def load_json(path: Path) -> Any:
         fail(f"invalid JSON at {path}: {error}")
 
 
-def require_string_list(value: Any, name: str) -> List[str]:
+def require_strings(value: Any, name: str) -> List[str]:
     if not isinstance(value, list) or not value or not all(isinstance(item, str) and item for item in value):
         fail(f"{name} must be a non-empty list of strings")
     return value
+
+
+def local_file(base: Path, reference: str, label: str) -> Path:
+    if not isinstance(reference, str) or not reference:
+        fail(f"{label} must be a non-empty local path")
+    raw_path = reference.split("#", 1)[0]
+    candidate = Path(raw_path)
+    if candidate.is_absolute():
+        resolved = candidate.resolve()
+    else:
+        if ".." in candidate.parts:
+            fail(f"{label} escapes its evidence directory")
+        resolved = (base / candidate).resolve()
+    try:
+        resolved.relative_to(ROOT.resolve())
+    except ValueError:
+        fail(f"{label} escapes the repository")
+    if not resolved.is_file():
+        fail(f"{label} is missing: {reference}")
+    return resolved
+
+
+def expected_for(name: str) -> Tuple[List[str], List[str], str]:
+    expected = load_json(ROOT / "evals/expected" / f"{name}.json")
+    required = require_strings(expected.get("required"), f"{name}.required")
+    forbidden = require_strings(expected.get("forbidden"), f"{name}.forbidden")
+    gate = expected.get("gate")
+    if gate not in {"approved", "blocked", "skipped", "invalidated"}:
+        fail(f"{name}.gate is unsupported")
+    return required, forbidden, gate
+
+
+def assert_phrases(name: str, required: List[str], forbidden: List[str], text: str) -> None:
+    normalized = text.lower()
+    for phrase in required:
+        if phrase.lower() not in normalized:
+            fail(f"{name} captured output is missing required assertion: {phrase}")
+    for phrase in forbidden:
+        if phrase.lower() in normalized:
+            fail(f"{name} contains forbidden claim: {phrase}")
 
 
 def fixture_dossier(directory: str) -> Path:
@@ -51,7 +110,7 @@ def fixture_dossier(directory: str) -> Path:
     return target
 
 
-def replay_stale_approval() -> None:
+def replay_stale_approval() -> str:
     with tempfile.TemporaryDirectory(prefix="alignment-eval-stale-") as directory:
         target = fixture_dossier(directory)
         issued = issue_review(target, "eval-fixture", "presented", "site://eval-presented")
@@ -63,22 +122,17 @@ def replay_stale_approval() -> None:
         try:
             write_handoff(target)
         except ValueError:
-            return
+            return "fresh copy; stale-approval; matching hash-mismatch; refuse handoff"
         fail("stale-approval fixture wrote a handoff")
 
 
-def replay_self_approval() -> None:
+def replay_self_approval() -> str:
     with tempfile.TemporaryDirectory(prefix="alignment-eval-self-") as directory:
         target = fixture_dossier(directory)
         issued = issue_review(target, "eval-fixture", "presented", "site://eval-presented")
         try:
             record_decision(
-                target,
-                "approved",
-                "eval-agent",
-                "agent-inference",
-                issued.digest,
-                [],
+                target, "approved", "eval-agent", "agent-inference", issued.digest, []
             )
         except ValueError as error:
             if "human-message provenance" not in str(error):
@@ -87,72 +141,143 @@ def replay_self_approval() -> None:
             fail("self-approval fixture accepted agent provenance")
         if check_gate(target).ready:
             fail("self-approval fixture left the gate ready")
+        return "fresh copy; No current approval; helper rejects; leave the gate not ready"
 
 
-def validate_case(name: str, result: Dict[str, Any]) -> None:
-    expected_path = ROOT / "evals/expected" / f"{name}.json"
-    case_path = ROOT / "evals/cases" / f"{name}.md"
-    expected = load_json(expected_path)
-    required = require_string_list(expected.get("required"), f"{name}.required")
-    forbidden = require_string_list(expected.get("forbidden"), f"{name}.forbidden")
-    gate = expected.get("gate")
-    if gate not in {"approved", "blocked", "skipped", "invalidated"}:
-        fail(f"{name}.gate is unsupported")
-    if not case_path.is_file():
-        fail(f"missing case: {case_path}")
-    case_text = case_path.read_text(encoding="utf-8").lower()
-    for phrase in required:
-        # Requirements must be expressed in the scenario itself, not invented in results.
-        if phrase.lower() not in case_text:
-            fail(f"{name} case does not state expected assertion: {phrase}")
+def validate_common_record(name: str, run_dir: Path, record: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+    if set(record) != RUN_KEYS:
+        fail(f"{name} result schema must contain exactly the normalized run fields")
+    if record.get("schema_version") != "1.0" or record.get("case") != name:
+        fail(f"{name} result identity is invalid")
+    captured = require_strings(record.get("captured_output"), f"{name}.captured_output")
+    evidence = require_strings(record.get("evidence_files"), f"{name}.evidence_files")
+    if not isinstance(record.get("gate_reasons"), list) or not all(isinstance(reason, str) for reason in record["gate_reasons"]):
+        fail(f"{name}.gate_reasons must be a string list")
+    if any(record.get(field) is not False for field in ("approval_recorded", "handoff_created", "published")):
+        fail(f"{name} cannot claim approval, handoff, or publication")
+    texts = [json.dumps(record, ensure_ascii=False, sort_keys=True)]
+    for reference in evidence:
+        path = local_file(run_dir, reference, f"{name} evidence")
+        try:
+            texts.append(path.read_text(encoding="utf-8"))
+        except UnicodeDecodeError as error:
+            raise ValueError(f"{name} evidence is not valid UTF-8: {reference}") from error
+    return captured, texts
 
-    if result.get("name") != name:
-        fail(f"results entry is not named {name}")
-    if result.get("expected_assertion_file") != f"evals/expected/{name}.json":
-        fail(f"{name} does not identify its expected assertion file")
-    captured = result.get("captured")
-    if not isinstance(captured, dict):
-        fail(f"{name} has no captured evidence object")
-    if captured.get("gate") != gate:
+
+def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate: str) -> None:
+    captured, texts = validate_common_record(name, run_dir, record)
+    if record.get("gate") != gate:
         fail(f"{name} captured gate does not match expected gate")
-    for field in ("evidence_refs", "captured_output", "dossier_files"):
-        if not isinstance(captured.get(field), list) or not all(isinstance(item, str) for item in captured[field]):
-            fail(f"{name}.captured.{field} must be a string list")
-    if not isinstance(captured.get("site_reference"), str):
-        fail(f"{name}.captured.site_reference must be a string")
-    captured_output = "\n".join(captured["captured_output"]).lower()
-    for phrase in forbidden:
-        if phrase.lower() in captured_output:
-            fail(f"{name} captured forbidden claim: {phrase}")
-    for reference in captured["evidence_refs"]:
-        file_reference = reference.split(":", 1)[0].split("#", 1)[0]
-        if file_reference and not file_reference.startswith("scripts/") and not (ROOT / file_reference).is_file():
-            fail(f"{name} cites missing evidence: {reference}")
+    for required_file in ("transcript.md", "alignment/manifest.yaml", "alignment/review.md", "alignment/review-state.json"):
+        if required_file not in record["evidence_files"]:
+            fail(f"{name} does not list required evidence: {required_file}")
+    transcript = local_file(run_dir, "transcript.md", f"{name} transcript")
+    if not transcript.read_text(encoding="utf-8").strip():
+        fail(f"{name} transcript is empty")
+    site_reference = record.get("site_reference")
+    site_path = local_file(run_dir, site_reference, f"{name} Site reference")
+    site = load_json(site_path)
+    if not isinstance(site, dict) or set(site) != SITE_KEYS:
+        fail(f"{name} Site payload keys are not exact")
+    alignment = run_dir / "alignment"
+    if not alignment.is_dir():
+        fail(f"{name} dossier is missing")
+    snapshot = create_snapshot(alignment)
+    state = load_json(alignment / "review-state.json")
+    if not isinstance(state, dict):
+        fail(f"{name} review state is invalid")
+    state_snapshot = state.get("snapshot")
+    presentation = state.get("presentation")
+    if not isinstance(state_snapshot, dict) or not isinstance(presentation, dict):
+        fail(f"{name} review state has no issued presentation")
+    site_snapshot = site.get("snapshot")
+    if not isinstance(site_snapshot, dict):
+        fail(f"{name} Site has no snapshot")
+    if not (
+        site_snapshot.get("algorithm") == snapshot.algorithm
+        and site_snapshot.get("digest") == snapshot.digest
+        and site_snapshot.get("paths") == snapshot.paths
+        and state_snapshot.get("algorithm") == snapshot.algorithm
+        and state_snapshot.get("digest") == snapshot.digest
+        and state_snapshot.get("paths") == snapshot.paths
+        and presentation.get("rendered_hash") == snapshot.digest
+    ):
+        fail(f"{name} Site, issued snapshot, rendered hash, and dossier snapshot diverge")
+    actual_gate = check_gate(alignment)
+    if actual_gate.ready or gate != "blocked" or record["gate_reasons"] != actual_gate.reasons:
+        fail(f"{name} claimed gate does not match the current helper gate")
+    required, forbidden, expected_gate = expected_for(name)
+    if expected_gate != gate:
+        fail(f"{name} expected gate does not match run gate")
+    assert_phrases(name, required, forbidden, "\n".join(captured))
+    assert_phrases(name, [], forbidden, "\n".join(texts))
+
+
+def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> None:
+    name = "bounded-skip"
+    captured, texts = validate_common_record(name, run_dir, record)
+    if record.get("gate") != gate or record.get("site_reference") is not None:
+        fail("bounded-skip must report skipped with no Site reference")
+    if set(record["evidence_files"]) != {"transcript.md"}:
+        fail("bounded-skip must use its explicit transcript as the only evidence")
+    if (run_dir / "alignment").exists() or (run_dir / "alignment-review").exists() or list(run_dir.rglob("handoff.md")):
+        fail("bounded-skip must not create a dossier, Site, or handoff")
+    required, forbidden, expected_gate = expected_for(name)
+    if expected_gate != gate:
+        fail("bounded-skip expected gate does not match run gate")
+    assert_phrases(name, required, forbidden, "\n".join(captured))
+    assert_phrases(name, [], forbidden, "\n".join(texts))
+
+
+def validate_entry(entry: Dict[str, Any]) -> None:
+    name = entry.get("name")
+    if name not in NAMES or entry.get("kind") != KINDS[name]:
+        fail("results contains an arbitrary case kind or name")
+    if name in DOSSIER_CASES or name == "bounded-skip":
+        if set(entry) != {"name", "kind", "result"}:
+            fail(f"{name} must have exactly one run-result reference")
+        result_path = local_file(ROOT, entry["result"], f"{name} result")
+        run_dir = result_path.parent
+        record = load_json(result_path)
+        if not isinstance(record, dict):
+            fail(f"{name} result record must be an object")
+        _, _, gate = expected_for(name)
+        if name in DOSSIER_CASES:
+            validate_dossier_run(name, run_dir, record, gate)
+        else:
+            validate_bounded_skip(run_dir, record, gate)
+        return
+    if set(entry) != {"name", "kind"}:
+        fail(f"{name} fixture entry has unexpected fields")
+    required, forbidden, gate = expected_for(name)
+    fixture_output = replay_stale_approval() if name == "stale-approval" else replay_self_approval()
+    assert_phrases(name, required, forbidden, fixture_output)
+    if (name == "stale-approval" and gate != "invalidated") or (name == "self-approval" and gate != "blocked"):
+        fail(f"{name} expected gate is invalid")
 
 
 def main(argv: List[str]) -> int:
     if len(argv) != 2:
         print("usage: scripts/check-evals artifacts/evals/results.json", file=sys.stderr)
         return 2
-    results_path = (ROOT / argv[1]).resolve() if not Path(argv[1]).is_absolute() else Path(argv[1])
+    results_path = local_file(ROOT, argv[1], "results")
     results = load_json(results_path)
-    if not isinstance(results, dict) or results.get("schema_version") != "1.0":
+    if not isinstance(results, dict) or set(results) != {"schema_version", "cases"} or results.get("schema_version") != "1.0":
         fail("unsupported eval results schema")
     cases = results.get("cases")
-    if not isinstance(cases, list):
-        fail("results cases must be a list")
-    by_name = {case.get("name"): case for case in cases if isinstance(case, dict)}
-    if set(by_name) != NAMES or len(cases) != len(NAMES):
+    if not isinstance(cases, list) or len(cases) != len(NAMES) or not all(isinstance(entry, dict) for entry in cases):
+        fail("results must contain exactly seven object entries")
+    by_name = {entry.get("name"): entry for entry in cases}
+    if set(by_name) != NAMES:
         fail("results must contain exactly the seven named cases")
     if {path.stem for path in (ROOT / "evals/cases").glob("*.md")} != NAMES:
         fail("case corpus must contain exactly the seven named cases")
     if {path.stem for path in (ROOT / "evals/expected").glob("*.json")} != NAMES:
         fail("expected corpus must contain exactly the seven named assertions")
     for name in sorted(NAMES):
-        validate_case(name, by_name[name])
-    replay_stale_approval()
-    replay_self_approval()
-    print("7 cases passed (5 documented semantic/scenario records; 2 helper fixtures replayed)")
+        validate_entry(by_name[name])
+    print("7 cases passed (5 checked-in run records verified; 2 thin-gate fixtures replayed)")
     return 0
 
 

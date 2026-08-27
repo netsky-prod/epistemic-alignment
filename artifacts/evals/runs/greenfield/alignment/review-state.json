@@ -1,0 +1,31 @@
+{
+  "decision": {},
+  "handoff": {},
+  "presentation": {
+    "adapter": "codex-sites",
+    "location": "alignment-review/site",
+    "presented_at": "2026-08-27T09:29:29Z",
+    "rendered_hash": "25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7",
+    "status": "presented"
+  },
+  "schema_version": "1.0",
+  "snapshot": {
+    "algorithm": "sha256-v1",
+    "digest": "25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7",
+    "issued_at": "2026-08-27T09:29:29Z",
+    "paths": [
+      "architecture/components.md",
+      "architecture/containers.md",
+      "architecture/context.md",
+      "assumptions.md",
+      "charter.md",
+      "decisions/ADR-001.md",
+      "features/billing-handoff.feature",
+      "glossary.md",
+      "open-questions.md",
+      "review.md",
+      "stakeholders.md",
+      "use-cases/UC-001.md"
+    ]
+  }
+}

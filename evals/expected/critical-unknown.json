@@ -1,5 +1,5 @@
 {
-  "required": ["open questions", "semantic review findings", "risks/findings", "human decision"],
-  "forbidden": ["machine certification", "requirements are complete", "hiding the unknown"],
+  "required": ["Retention policy UQ-001", "Semantic review finding", "Reviewable artifact paths", "unresolved human findings"],
+  "forbidden": ["machine certification passed", "requirements are complete", "hiding the unknown"],
   "gate": "blocked"
 }

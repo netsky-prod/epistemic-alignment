@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "case": "critical-unknown",
+  "captured_output": ["Retention policy UQ-001 is explicitly unknown and remains owned by the policy/data-governance owner.", "Semantic review finding F-001 remains open and blocking; no requirements-complete claim is made.", "Reviewable artifact paths are synchronized in alignment/manifest.yaml.", "Draft/presented review reference: alignment-review/site-review.json; its snapshot digest is 013f82ad21af23e4d9bc9990828464089e3a0228e44dff30eca4aa6889720a9e.", "Final gate: blocked because unresolved human findings remain and no approval was recorded; helper state is review-state-invalid.", "No publish, approval, handoff, or machine certificate occurred."],
+  "evidence_files": ["alignment/manifest.yaml", "alignment/charter.md", "alignment/stakeholders.md", "alignment/glossary.md", "alignment/assumptions.md", "alignment/open-questions.md", "alignment/use-cases/UC-001.md", "alignment/features/health-data-import.feature", "alignment/architecture/context.md", "alignment/architecture/containers.md", "alignment/architecture/components.md", "alignment/decisions/ADR-001.md", "alignment/review.md", "alignment/review-state.json", "alignment-review/site-review.json", "transcript.md"],
+  "site_reference": "alignment-review/site-review.json",
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "approval_recorded": false,
+  "handoff_created": false,
+  "published": false
+}

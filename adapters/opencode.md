@@ -21,6 +21,13 @@ input and return the standard adapter output. Installation packaging, command
 syntax, and host API calls remain future work until OpenCode's extension API is
 validated.
 
+## Capability check and fallback
+
+The future extension first requires `host_capabilities.local_static_preview ==
+true`. There is no permitted fallback within the OpenCode local-static path.
+If the predicate is false, it returns the standard `failed` result (null
+location/rendered hash plus a warning) and does not call `issue-review`.
+
 ## Planned preview
 
 After a future renderer writes `<project>/alignment-review/static/`, preview

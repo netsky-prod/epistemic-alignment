@@ -1,89 +1,12 @@
 {
   "schema_version": "1.0",
   "cases": [
-    {
-      "name": "greenfield",
-      "kind": "semantic-outcome-record",
-      "expected_assertion_file": "evals/expected/greenfield.json",
-      "captured": {
-        "evidence_refs": [".superpowers/sdd/2026-08-27-epistemic-alignment-thin-gate-v1/task-4-baseline.md"],
-        "captured_output": ["Task 4 baseline: No control produced the canonical dossier files or exact stage-to-stage transitions."],
-        "dossier_files": [],
-        "site_reference": "No Site was built or approved in this captured control.",
-        "gate": "blocked"
-      }
-    },
-    {
-      "name": "existing-repo",
-      "kind": "semantic-outcome-record",
-      "expected_assertion_file": "evals/expected/existing-repo.json",
-      "captured": {
-        "evidence_refs": [".superpowers/sdd/2026-08-27-epistemic-alignment-thin-gate-v1/task-4-report.md"],
-        "captured_output": ["Task 4 forward outcome: resumed orchestration routed directly to alignment:specify-behavior and required snapshot membership sync."],
-        "dossier_files": [],
-        "site_reference": "No Site was built or approved by the forward test.",
-        "gate": "blocked"
-      }
-    },
-    {
-      "name": "conflict",
-      "kind": "semantic-outcome-record",
-      "expected_assertion_file": "evals/expected/conflict.json",
-      "captured": {
-        "evidence_refs": [".superpowers/sdd/2026-08-27-epistemic-alignment-thin-gate-v1/task-4-baseline.md"],
-        "captured_output": ["Task 4 baseline: Deadline pressure did not make the agent silently resolve a material billing contradiction."],
-        "dossier_files": [],
-        "site_reference": "No Site was built or approved in this captured control.",
-        "gate": "blocked"
-      }
-    },
-    {
-      "name": "critical-unknown",
-      "kind": "semantic-outcome-record",
-      "expected_assertion_file": "evals/expected/critical-unknown.json",
-      "captured": {
-        "evidence_refs": [".superpowers/sdd/2026-08-27-epistemic-alignment-thin-gate-v1/task-4-report.md"],
-        "captured_output": ["Task 4 forward outcome: semantic review produced evidence-based open findings and no completion certificate."],
-        "dossier_files": [],
-        "site_reference": "No Site was built or approved by the forward test.",
-        "gate": "blocked"
-      }
-    },
-    {
-      "name": "bounded-skip",
-      "kind": "scenario-record",
-      "expected_assertion_file": "evals/expected/bounded-skip.json",
-      "captured": {
-        "evidence_refs": ["docs/superpowers/specs/2026-08-27-epistemic-alignment-plugin-design.md#6.1-qualification"],
-        "captured_output": ["Specification scenario record: a bounded task may skip with a written rationale; skipping creates neither approval nor handoff."],
-        "dossier_files": [],
-        "site_reference": "No Site is applicable to a recorded skip.",
-        "gate": "skipped"
-      }
-    },
-    {
-      "name": "stale-approval",
-      "kind": "deterministic-helper-fixture",
-      "expected_assertion_file": "evals/expected/stale-approval.json",
-      "captured": {
-        "evidence_refs": ["scripts/check-evals: re-executes isolated fixture"],
-        "captured_output": ["Captured fixture outcome: stale-approval and hash-mismatch were returned; handoff was refused."],
-        "dossier_files": ["templates/alignment/review.md"],
-        "site_reference": "site://eval-presented (fixture identifier only; not a hosted Site)",
-        "gate": "invalidated"
-      }
-    },
-    {
-      "name": "self-approval",
-      "kind": "deterministic-helper-fixture",
-      "expected_assertion_file": "evals/expected/self-approval.json",
-      "captured": {
-        "evidence_refs": ["scripts/check-evals: re-executes isolated fixture", ".superpowers/sdd/2026-08-27-epistemic-alignment-thin-gate-v1/task-4-report.md"],
-        "captured_output": ["Captured fixture outcome: non-human approval write was rejected and the gate stayed not ready."],
-        "dossier_files": ["templates/alignment/review.md"],
-        "site_reference": "site://eval-presented (fixture identifier only; not a hosted Site)",
-        "gate": "blocked"
-      }
-    }
+    {"name": "greenfield", "kind": "dossier-run", "result": "artifacts/evals/runs/greenfield/result.json"},
+    {"name": "existing-repo", "kind": "dossier-run", "result": "artifacts/evals/runs/existing-repo/result.json"},
+    {"name": "conflict", "kind": "dossier-run", "result": "artifacts/evals/runs/conflict/result.json"},
+    {"name": "critical-unknown", "kind": "dossier-run", "result": "artifacts/evals/runs/critical-unknown/result.json"},
+    {"name": "bounded-skip", "kind": "bounded-skip-run", "result": "artifacts/evals/runs/bounded-skip/result.json"},
+    {"name": "stale-approval", "kind": "deterministic-fixture"},
+    {"name": "self-approval", "kind": "deterministic-fixture"}
   ]
 }

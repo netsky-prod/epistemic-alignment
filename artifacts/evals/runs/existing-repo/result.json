@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "case": "existing-repo",
+  "captured_output": ["Repository facts: current importer accepts CSV and stores records for 30 days.", "The proposed health-data import is labelled proposed and is not a repository fact.", "Reviewable artifact paths are synchronized in alignment/manifest.yaml.", "Retention uncertainty UQ-001 remains an open blocker in review.md and the draft Site payload.", "Draft Site reference: alignment-review/site-review.json; no publish, approval, or handoff occurred.", "Final gate: blocked because retention is unresolved and no current explicit human approval exists; helper state is review-state-invalid because no decision was recorded."],
+  "evidence_files": ["alignment/manifest.yaml", "alignment/charter.md", "alignment/stakeholders.md", "alignment/glossary.md", "alignment/assumptions.md", "alignment/open-questions.md", "alignment/use-cases/UC-001.md", "alignment/features/health-data-import.feature", "alignment/architecture/context.md", "alignment/architecture/containers.md", "alignment/architecture/components.md", "alignment/decisions/ADR-001.md", "alignment/review.md", "alignment/review-state.json", "alignment-review/site-review.json", "transcript.md"],
+  "site_reference": "alignment-review/site-review.json",
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "approval_recorded": false,
+  "handoff_created": false,
+  "published": false
+}
