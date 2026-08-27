@@ -15,3 +15,10 @@ class Snapshot:
     algorithm: str
     digest: str
     paths: List[str]
+
+
+@dataclass(frozen=True)
+class GateResult:
+    ready: bool
+    reasons: List[str]
+    digest: str
