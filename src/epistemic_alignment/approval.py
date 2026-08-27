@@ -1,9 +1,11 @@
 import json
 import os
 import tempfile
+import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List
 
 from .models import GateResult, Snapshot
 from .snapshot import create_snapshot
@@ -13,6 +15,9 @@ _STATE_NAME = "review-state.json"
 _SCHEMA_VERSION = "1.0"
 _PRESENTATION_STATUSES = {"draft", "presented", "published"}
 _DECISIONS = {"approved", "changes_requested", "rejected"}
+_SNAPSHOT_ALGORITHM = "sha256-v1"
+_LOCK_NAME = ".alignment-gate.lock"
+_LOCK_TIMEOUT_SECONDS = 5
 
 
 def _utc_now() -> str:
@@ -21,6 +26,28 @@ def _utc_now() -> str:
 
 def _state_path(alignment_dir: Path) -> Path:
     return alignment_dir / _STATE_NAME
+
+
+def _handoff_path(alignment_dir: Path) -> Path:
+    return alignment_dir / "handoff.md"
+
+
+@contextmanager
+def mutation_lock(alignment_dir: Path) -> Iterator[None]:
+    lock_path = alignment_dir / _LOCK_NAME
+    deadline = time.monotonic() + _LOCK_TIMEOUT_SECONDS
+    while True:
+        try:
+            os.mkdir(lock_path)
+            break
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise ValueError("timed out waiting for the dossier mutation lock") from None
+            time.sleep(0.01)
+    try:
+        yield
+    finally:
+        os.rmdir(lock_path)
 
 
 def _load_state(alignment_dir: Path) -> Dict[str, Any]:
@@ -67,10 +94,55 @@ def _require_text(value: Any, name: str) -> str:
     return value
 
 
-def _issued_hashes(state: Dict[str, Any]) -> Tuple[str, str]:
-    issued = state["snapshot"].get("issued_hash")
-    rendered = state["presentation"].get("rendered_hash")
-    return _require_text(issued, "issued hash"), _require_text(rendered, "rendered hash")
+def _require_string_list(value: Any, name: str) -> List[str]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{name} must be a list of strings")
+    return value
+
+
+def _validate_issuance_state(state: Dict[str, Any]) -> None:
+    snapshot = state["snapshot"]
+    presentation = state["presentation"]
+    if snapshot.get("algorithm") != _SNAPSHOT_ALGORITHM:
+        raise ValueError("unsupported snapshot algorithm in review state")
+    _require_text(snapshot.get("digest"), "snapshot digest")
+    _require_string_list(snapshot.get("paths"), "snapshot paths")
+    _require_text(snapshot.get("issued_at"), "snapshot issued_at")
+    _require_text(presentation.get("adapter"), "presentation adapter")
+    if presentation.get("status") not in _PRESENTATION_STATUSES:
+        raise ValueError("unsupported presentation status in review state")
+    _require_text(presentation.get("location"), "presentation location")
+    _require_text(presentation.get("rendered_hash"), "presentation rendered hash")
+    _require_text(presentation.get("presented_at"), "presentation presented_at")
+
+
+def _validate_complete_state(state: Dict[str, Any]) -> None:
+    _validate_issuance_state(state)
+    decision = state["decision"]
+    if decision.get("decision") not in _DECISIONS:
+        raise ValueError("unsupported decision in review state")
+    _require_text(decision.get("reviewer"), "decision reviewer")
+    _require_text(decision.get("provenance"), "decision provenance")
+    _require_text(decision.get("decided_at"), "decision decided_at")
+    _require_text(decision.get("review_hash"), "decision review hash")
+    _require_string_list(decision.get("acknowledged_findings"), "acknowledged findings")
+    handoff = state["handoff"]
+    if handoff:
+        if handoff.get("algorithm") != _SNAPSHOT_ALGORITHM:
+            raise ValueError("unsupported handoff algorithm in review state")
+        _require_text(handoff.get("digest"), "handoff digest")
+        _require_text(handoff.get("verified_at"), "handoff verified_at")
+
+
+def _review_is_snapshotted(snapshot: Snapshot) -> bool:
+    return "review.md" in snapshot.paths
+
+
+def _remove_handoff(alignment_dir: Path) -> None:
+    try:
+        _handoff_path(alignment_dir).unlink()
+    except FileNotFoundError:
+        pass
 
 
 def issue_review(alignment_dir: Path, adapter: str, status: str, location: str) -> Snapshot:
@@ -79,30 +151,34 @@ def issue_review(alignment_dir: Path, adapter: str, status: str, location: str) 
     _require_text(adapter, "adapter")
     _require_text(location, "location")
 
-    snapshot = create_snapshot(alignment_dir)
-    state = _load_state(alignment_dir)
-    timestamp = _utc_now()
-    state["snapshot"].update(
-        {
-            "algorithm": snapshot.algorithm,
-            "issued_hash": snapshot.digest,
-            "paths": snapshot.paths,
-            "issued_at": timestamp,
-        }
-    )
-    state["presentation"].update(
-        {
-            "adapter": adapter,
-            "status": status,
-            "location": location,
-            "rendered_hash": snapshot.digest,
-            "rendered_at": timestamp,
-        }
-    )
-    state["decision"] = {}
-    state["handoff"] = {}
-    _write_state(alignment_dir, state)
-    return snapshot
+    with mutation_lock(alignment_dir):
+        snapshot = create_snapshot(alignment_dir)
+        if not _review_is_snapshotted(snapshot):
+            raise ValueError("review.md must be included in snapshot paths")
+        state = _load_state(alignment_dir)
+        timestamp = _utc_now()
+        state["snapshot"].update(
+            {
+                "algorithm": snapshot.algorithm,
+                "digest": snapshot.digest,
+                "paths": snapshot.paths,
+                "issued_at": timestamp,
+            }
+        )
+        state["presentation"].update(
+            {
+                "adapter": adapter,
+                "status": status,
+                "location": location,
+                "rendered_hash": snapshot.digest,
+                "presented_at": timestamp,
+            }
+        )
+        state["decision"] = {}
+        state["handoff"] = {}
+        _remove_handoff(alignment_dir)
+        _write_state(alignment_dir, state)
+        return snapshot
 
 
 def record_decision(
@@ -123,27 +199,33 @@ def record_decision(
     ):
         raise ValueError("acknowledged findings must be a list of strings")
 
-    current = create_snapshot(alignment_dir)
-    state = _load_state(alignment_dir)
-    issued, rendered = _issued_hashes(state)
-    if decision == "approved":
-        if provenance != "human-message":
-            raise ValueError("approved decisions require human-message provenance")
-        if state["presentation"].get("status") not in {"presented", "published"}:
-            raise ValueError("approved decisions require a presented or published review")
-        if {review_hash, issued, rendered, current.digest} != {current.digest}:
-            raise ValueError("approved decision hash must match issued, rendered, and current snapshot")
+    with mutation_lock(alignment_dir):
+        current = create_snapshot(alignment_dir)
+        if not _review_is_snapshotted(current):
+            raise ValueError("review.md must be included in snapshot paths")
+        state = _load_state(alignment_dir)
+        _validate_issuance_state(state)
+        issued = state["snapshot"]["digest"]
+        rendered = state["presentation"]["rendered_hash"]
+        if decision == "approved":
+            if provenance != "human-message":
+                raise ValueError("approved decisions require human-message provenance")
+            if state["presentation"].get("status") not in {"presented", "published"}:
+                raise ValueError("approved decisions require a presented or published review")
+            if {review_hash, issued, rendered, current.digest} != {current.digest}:
+                raise ValueError("approved decision hash must match issued, rendered, and current snapshot")
 
-    state["decision"] = {
-        "decision": decision,
-        "reviewer": reviewer,
-        "provenance": provenance,
-        "review_hash": review_hash,
-        "acknowledged_findings": acknowledged_findings,
-        "decided_at": _utc_now(),
-    }
-    state["handoff"] = {}
-    _write_state(alignment_dir, state)
+        state["decision"] = {
+            "decision": decision,
+            "reviewer": reviewer,
+            "provenance": provenance,
+            "review_hash": review_hash,
+            "acknowledged_findings": acknowledged_findings,
+            "decided_at": _utc_now(),
+        }
+        state["handoff"] = {}
+        _remove_handoff(alignment_dir)
+        _write_state(alignment_dir, state)
 
 
 def check_gate(alignment_dir: Path) -> GateResult:
@@ -152,24 +234,26 @@ def check_gate(alignment_dir: Path) -> GateResult:
     except ValueError:
         return GateResult(ready=False, reasons=["snapshot-invalid"], digest="")
 
+    if not _review_is_snapshotted(current):
+        return GateResult(ready=False, reasons=["review-not-snapshotted"], digest=current.digest)
+
     try:
         state = _load_state(alignment_dir)
+        _validate_complete_state(state)
     except ValueError:
         return GateResult(ready=False, reasons=["review-state-invalid"], digest=current.digest)
 
     reasons = []
-    issued = state["snapshot"].get("issued_hash")
-    rendered = state["presentation"].get("rendered_hash")
+    issued = state["snapshot"]["digest"]
+    rendered = state["presentation"]["rendered_hash"]
     decision = state["decision"]
-    if not isinstance(issued, str) or not issued or not isinstance(rendered, str) or not rendered:
-        reasons.append("review-not-issued")
     if state["presentation"].get("status") not in {"presented", "published"}:
         reasons.append("presentation-not-presented")
     if decision.get("decision") != "approved":
         reasons.append("decision-not-approved")
     if decision.get("provenance") != "human-message":
         reasons.append("non-human-provenance")
-    if isinstance(issued, str) and issued and current.digest != issued:
+    if current.digest != issued:
         reasons.append("stale-approval")
     if not (
         issued == rendered == decision.get("review_hash") == current.digest

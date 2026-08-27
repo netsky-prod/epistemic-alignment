@@ -2,9 +2,12 @@ import json
 import shutil
 import subprocess
 import tempfile
+import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 
+import epistemic_alignment.handoff as handoff_module
 from epistemic_alignment.approval import check_gate, issue_review, record_decision
 from epistemic_alignment.handoff import write_handoff
 
@@ -21,6 +24,14 @@ class ApprovalGateTests(unittest.TestCase):
 
     def state(self, target):
         return json.loads((target / "review-state.json").read_text(encoding="utf-8"))
+
+    def approve(self, target):
+        issued = issue_review(target, "codex-sites", "presented", "site://review")
+        record_decision(target, "approved", "owner", "human-message", issued.digest, [])
+        return issued
+
+    def write_state(self, target, state):
+        (target / "review-state.json").write_text(json.dumps(state), encoding="utf-8")
 
     def test_unchanged_human_approved_presented_snapshot_can_handoff(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -69,6 +80,8 @@ class ApprovalGateTests(unittest.TestCase):
                 record_decision(target, "approved", "owner", "human-message", "0" * 64, [])
             self.assertEqual(self.state(target)["decision"], {})
 
+            record_decision(target, "approved", "owner", "human-message", issued.digest, [])
+
             state = self.state(target)
             state["presentation"]["rendered_hash"] = "f" * 64
             (target / "review-state.json").write_text(json.dumps(state), encoding="utf-8")
@@ -94,7 +107,168 @@ class ApprovalGateTests(unittest.TestCase):
             gate = check_gate(self.dossier(directory))
 
             self.assertFalse(gate.ready)
-            self.assertIn("review-not-issued", gate.reasons)
+            self.assertIn("review-state-invalid", gate.reasons)
+
+    def test_missing_or_wrong_type_required_state_fields_fail_closed(self):
+        invalid_fields = [
+            ("snapshot", "algorithm", None),
+            ("snapshot", "algorithm", "md5"),
+            ("snapshot", "digest", None),
+            ("snapshot", "paths", "review.md"),
+            ("snapshot", "issued_at", 1),
+            ("presentation", "adapter", 1),
+            ("presentation", "status", "unknown"),
+            ("presentation", "location", []),
+            ("presentation", "rendered_hash", None),
+            ("presentation", "presented_at", None),
+            ("decision", "decision", "unknown"),
+            ("decision", "reviewer", []),
+            ("decision", "provenance", []),
+            ("decision", "decided_at", None),
+            ("decision", "review_hash", None),
+            ("decision", "acknowledged_findings", [1]),
+        ]
+        for section, field, value in invalid_fields:
+            with self.subTest(section=section, field=field), tempfile.TemporaryDirectory() as directory:
+                target = self.dossier(directory)
+                self.approve(target)
+                state = self.state(target)
+                state[section][field] = value
+                self.write_state(target, state)
+
+                gate = check_gate(target)
+                self.assertFalse(gate.ready)
+                self.assertEqual(gate.reasons, ["review-state-invalid"])
+
+    def test_malformed_handoff_state_fails_closed_without_raising(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            write_handoff(target)
+            state = self.state(target)
+            state["handoff"]["verified_at"] = []
+            self.write_state(target, state)
+
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertEqual(gate.reasons, ["review-state-invalid"])
+
+    def test_unsupported_handoff_algorithm_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            write_handoff(target)
+            state = self.state(target)
+            state["handoff"]["algorithm"] = "md5"
+            self.write_state(target, state)
+
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertEqual(gate.reasons, ["review-state-invalid"])
+
+    def test_review_must_be_snapshotted_before_review_or_handoff(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            manifest = json.loads((target / "manifest.yaml").read_text(encoding="utf-8"))
+            manifest["snapshot_paths"].remove("review.md")
+            (target / "manifest.yaml").write_text(json.dumps(manifest), encoding="utf-8")
+
+            with self.assertRaises(ValueError):
+                issue_review(target, "codex-sites", "presented", "site://review")
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertIn("review-not-snapshotted", gate.reasons)
+            with self.assertRaises(ValueError):
+                write_handoff(target)
+
+    def test_issuing_a_new_review_removes_the_previous_handoff_artifact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            write_handoff(target)
+            self.assertTrue((target / "handoff.md").exists())
+
+            issue_review(target, "codex-sites", "presented", "site://replacement")
+
+            self.assertFalse((target / "handoff.md").exists())
+            self.assertEqual(self.state(target)["handoff"], {})
+
+    def test_post_write_edit_removes_the_newly_stale_handoff_artifact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            original_write = handoff_module._write_text_atomically
+
+            def edit_after_write(path, content):
+                original_write(path, content)
+                (target / "review.md").write_text("edited during handoff", encoding="utf-8")
+
+            with mock.patch.object(handoff_module, "_write_text_atomically", edit_after_write):
+                with self.assertRaises(ValueError):
+                    write_handoff(target)
+
+            self.assertFalse((target / "handoff.md").exists())
+            self.assertEqual(self.state(target)["handoff"], {})
+
+    def test_post_state_write_edit_removes_the_newly_stale_handoff_artifact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            original_write = handoff_module._write_state
+
+            def edit_after_state_write(alignment_dir, state):
+                original_write(alignment_dir, state)
+                if state["handoff"]:
+                    (target / "review.md").write_text(
+                        "edited after handoff state", encoding="utf-8"
+                    )
+
+            with mock.patch.object(handoff_module, "_write_state", edit_after_state_write):
+                with self.assertRaises(ValueError):
+                    write_handoff(target)
+
+            self.assertFalse((target / "handoff.md").exists())
+            self.assertEqual(self.state(target)["handoff"], {})
+
+    def test_concurrent_new_review_waits_for_handoff_then_removes_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            wrote_handoff = threading.Event()
+            release_handoff = threading.Event()
+            failures = []
+            original_write = handoff_module._write_text_atomically
+
+            def pause_after_write(path, content):
+                original_write(path, content)
+                wrote_handoff.set()
+                self.assertTrue(release_handoff.wait(3))
+
+            def capture(callable_):
+                try:
+                    callable_()
+                except BaseException as error:
+                    failures.append(error)
+
+            with mock.patch.object(handoff_module, "_write_text_atomically", pause_after_write):
+                handoff_thread = threading.Thread(target=capture, args=(lambda: write_handoff(target),))
+                handoff_thread.start()
+                self.assertTrue(wrote_handoff.wait(3))
+                issue_thread = threading.Thread(
+                    target=capture,
+                    args=(lambda: issue_review(target, "codex-sites", "presented", "site://new"),),
+                )
+                issue_thread.start()
+                self.assertTrue(issue_thread.is_alive())
+                release_handoff.set()
+                handoff_thread.join(3)
+                issue_thread.join(3)
+
+            self.assertFalse(handoff_thread.is_alive())
+            self.assertFalse(issue_thread.is_alive())
+            self.assertEqual(failures, [])
+            self.assertFalse((target / "handoff.md").exists())
+            self.assertFalse(check_gate(target).ready)
 
     def test_state_updates_preserve_unrelated_sections_and_clear_old_handoff(self):
         with tempfile.TemporaryDirectory() as directory:
