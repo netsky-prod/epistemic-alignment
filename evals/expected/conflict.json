@@ -1,0 +1,5 @@
+{
+  "required": ["contradiction", "decision owner", "review.md", "unresolved"],
+  "forbidden": ["machine invalidity", "the semantic validator passed", "automatic conflict resolution"],
+  "gate": "blocked"
+}

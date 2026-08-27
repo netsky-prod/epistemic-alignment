@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""Validate the checked-in scenario corpus and replay deterministic gate fixtures."""
+
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from epistemic_alignment.approval import check_gate, issue_review, record_decision
+from epistemic_alignment.handoff import write_handoff
+
+
+NAMES = {
+    "greenfield",
+    "existing-repo",
+    "conflict",
+    "critical-unknown",
+    "bounded-skip",
+    "stale-approval",
+    "self-approval",
+}
+DETERMINISTIC = {"stale-approval", "self-approval"}
+
+
+def fail(message: str) -> None:
+    raise ValueError(message)
+
+
+def load_json(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        fail(f"invalid JSON at {path}: {error}")
+
+
+def require_string_list(value: Any, name: str) -> List[str]:
+    if not isinstance(value, list) or not value or not all(isinstance(item, str) and item for item in value):
+        fail(f"{name} must be a non-empty list of strings")
+    return value
+
+
+def fixture_dossier(directory: str) -> Path:
+    target = Path(directory) / "alignment"
+    shutil.copytree(ROOT / "templates/alignment", target)
+    return target
+
+
+def replay_stale_approval() -> None:
+    with tempfile.TemporaryDirectory(prefix="alignment-eval-stale-") as directory:
+        target = fixture_dossier(directory)
+        issued = issue_review(target, "eval-fixture", "presented", "site://eval-presented")
+        record_decision(target, "approved", "eval-human", "human-message", issued.digest, [])
+        (target / "review.md").write_text("edited after approval\n", encoding="utf-8")
+        gate = check_gate(target)
+        if gate.ready or not {"stale-approval", "hash-mismatch"}.issubset(set(gate.reasons)):
+            fail("stale-approval fixture did not fail through the thin gate")
+        try:
+            write_handoff(target)
+        except ValueError:
+            return
+        fail("stale-approval fixture wrote a handoff")
+
+
+def replay_self_approval() -> None:
+    with tempfile.TemporaryDirectory(prefix="alignment-eval-self-") as directory:
+        target = fixture_dossier(directory)
+        issued = issue_review(target, "eval-fixture", "presented", "site://eval-presented")
+        try:
+            record_decision(
+                target,
+                "approved",
+                "eval-agent",
+                "agent-inference",
+                issued.digest,
+                [],
+            )
+        except ValueError as error:
+            if "human-message provenance" not in str(error):
+                fail(f"self-approval fixture failed for the wrong reason: {error}")
+        else:
+            fail("self-approval fixture accepted agent provenance")
+        if check_gate(target).ready:
+            fail("self-approval fixture left the gate ready")
+
+
+def validate_case(name: str, result: Dict[str, Any]) -> None:
+    expected_path = ROOT / "evals/expected" / f"{name}.json"
+    case_path = ROOT / "evals/cases" / f"{name}.md"
+    expected = load_json(expected_path)
+    required = require_string_list(expected.get("required"), f"{name}.required")
+    forbidden = require_string_list(expected.get("forbidden"), f"{name}.forbidden")
+    gate = expected.get("gate")
+    if gate not in {"approved", "blocked", "skipped", "invalidated"}:
+        fail(f"{name}.gate is unsupported")
+    if not case_path.is_file():
+        fail(f"missing case: {case_path}")
+    case_text = case_path.read_text(encoding="utf-8").lower()
+    for phrase in required:
+        # Requirements must be expressed in the scenario itself, not invented in results.
+        if phrase.lower() not in case_text:
+            fail(f"{name} case does not state expected assertion: {phrase}")
+
+    if result.get("name") != name:
+        fail(f"results entry is not named {name}")
+    if result.get("expected_assertion_file") != f"evals/expected/{name}.json":
+        fail(f"{name} does not identify its expected assertion file")
+    captured = result.get("captured")
+    if not isinstance(captured, dict):
+        fail(f"{name} has no captured evidence object")
+    if captured.get("gate") != gate:
+        fail(f"{name} captured gate does not match expected gate")
+    for field in ("evidence_refs", "captured_output", "dossier_files"):
+        if not isinstance(captured.get(field), list) or not all(isinstance(item, str) for item in captured[field]):
+            fail(f"{name}.captured.{field} must be a string list")
+    if not isinstance(captured.get("site_reference"), str):
+        fail(f"{name}.captured.site_reference must be a string")
+    captured_output = "\n".join(captured["captured_output"]).lower()
+    for phrase in forbidden:
+        if phrase.lower() in captured_output:
+            fail(f"{name} captured forbidden claim: {phrase}")
+    for reference in captured["evidence_refs"]:
+        file_reference = reference.split(":", 1)[0].split("#", 1)[0]
+        if file_reference and not file_reference.startswith("scripts/") and not (ROOT / file_reference).is_file():
+            fail(f"{name} cites missing evidence: {reference}")
+
+
+def main(argv: List[str]) -> int:
+    if len(argv) != 2:
+        print("usage: scripts/check-evals artifacts/evals/results.json", file=sys.stderr)
+        return 2
+    results_path = (ROOT / argv[1]).resolve() if not Path(argv[1]).is_absolute() else Path(argv[1])
+    results = load_json(results_path)
+    if not isinstance(results, dict) or results.get("schema_version") != "1.0":
+        fail("unsupported eval results schema")
+    cases = results.get("cases")
+    if not isinstance(cases, list):
+        fail("results cases must be a list")
+    by_name = {case.get("name"): case for case in cases if isinstance(case, dict)}
+    if set(by_name) != NAMES or len(cases) != len(NAMES):
+        fail("results must contain exactly the seven named cases")
+    if {path.stem for path in (ROOT / "evals/cases").glob("*.md")} != NAMES:
+        fail("case corpus must contain exactly the seven named cases")
+    if {path.stem for path in (ROOT / "evals/expected").glob("*.json")} != NAMES:
+        fail("expected corpus must contain exactly the seven named assertions")
+    for name in sorted(NAMES):
+        validate_case(name, by_name[name])
+    replay_stale_approval()
+    replay_self_approval()
+    print("7 cases passed (5 documented semantic/scenario records; 2 helper fixtures replayed)")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main(sys.argv))
+    except ValueError as error:
+        print(f"check-evals: {error}", file=sys.stderr)
+        raise SystemExit(1)

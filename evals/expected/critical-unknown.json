@@ -1,0 +1,5 @@
+{
+  "required": ["open questions", "semantic review findings", "risks/findings", "human decision"],
+  "forbidden": ["machine certification", "requirements are complete", "hiding the unknown"],
+  "gate": "blocked"
+}

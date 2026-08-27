@@ -1,0 +1,5 @@
+{
+  "required": ["skip rationale", "Do not create an approval", "handoff", "Site"],
+  "forbidden": ["approved alignment", "generated handoff", "requirements are satisfied"],
+  "gate": "skipped"
+}

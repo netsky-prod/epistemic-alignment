@@ -1,0 +1,5 @@
+{
+  "required": ["repository facts", "reviewable artifact paths", "retention uncertainty", "draft Site"],
+  "forbidden": ["coverage is complete", "architecture correctness proof", "stakeholder approval"],
+  "gate": "blocked"
+}
