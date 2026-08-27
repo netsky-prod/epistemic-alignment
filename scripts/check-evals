@@ -177,16 +177,17 @@ def transcript_events(name: str, text: str) -> List[Dict[str, Any]]:
 def validate_transcript(name: str, run_dir: Path, text: str,
                         evidence_files: List[str], site_reference: Optional[str],
                         snapshot: Optional[Any] = None,
-                        actual_gate: Optional[Any] = None) -> None:
+                        actual_gate: Optional[Any] = None,
+                        manifest: Optional[Dict[str, Any]] = None,
+                        state: Optional[Dict[str, Any]] = None) -> None:
     """Verify interaction mechanics without judging dossier semantics."""
     events = transcript_events(name, text)
     if name == "bounded-skip":
         expected = ["request", "qualification", "human-answer", "outcome"]
         if [event["type"] for event in events] != expected:
             fail(f"{name} transcript event schema must record request, qualification, human answer, and outcome")
-        for event in events:
-            for reference in event["evidence"]:
-                local_file(run_dir, reference, f"{name} transcript evidence")
+        if any(event["evidence"] for event in events):
+            fail(f"{name} transcript events cannot claim dossier or Site evidence")
         return
 
     if [event["type"] for event in events] != DOSSIER_EVENT_TYPES:
@@ -196,6 +197,13 @@ def validate_transcript(name: str, run_dir: Path, text: str,
         fail(f"{name} transcript event schema has an invalid operation sequence")
     if [event.get("action_id") for event in commands] != ["A001", "A002", "A003", "A004"]:
         fail(f"{name} transcript event schema has invalid action identities")
+    expected_event_evidence = [
+        [], [], [], ["alignment/manifest.yaml"], [], ["alignment/manifest.yaml"],
+        [site_reference], [], ["alignment/review-state.json"], [],
+        ["alignment/review-state.json"], ["alignment/review-state.json"],
+    ]
+    if [event["evidence"] for event in events] != expected_event_evidence:
+        fail(f"{name} transcript events are not bound to their run evidence")
     for event in events:
         for reference in event["evidence"]:
             if reference not in evidence_files:
@@ -203,15 +211,11 @@ def validate_transcript(name: str, run_dir: Path, text: str,
             local_file(run_dir, reference, f"{name} transcript evidence")
     for command in commands:
         argv = command.get("argv")
-        operation = command["operation"]
-        cli_operation = "check" if operation == "check-gate" else operation
         if (not isinstance(command.get("action_id"), str)
                 or not re.fullmatch(r"A\d{3}", command["action_id"])
-                or not isinstance(argv, list) or len(argv) < 3
-                or not all(isinstance(arg, str) and arg for arg in argv)
-                or Path(argv[0]).name != "alignment" or argv[1] != cli_operation
-                or argv[2] != "<run-dir>"):
-            fail(f"{name} transcript event schema has an invalid {operation} command")
+                or not isinstance(argv, list)
+                or not all(isinstance(arg, str) and arg for arg in argv)):
+            fail(f"{name} transcript event schema has an invalid command")
     results = [event for event in events if event["type"] == "command-result"]
     for command, result in zip(commands, results):
         if (result.get("action_id") != command["action_id"]
@@ -225,10 +229,33 @@ def validate_transcript(name: str, run_dir: Path, text: str,
     if (artifact["artifact_type"] != "review-surface" or artifact["path"] != site_path
             or artifact["evidence"] != [site_path]):
         fail(f"{name} transcript event schema does not bind the review surface")
-    if snapshot is None or actual_gate is None:
+    if snapshot is None or actual_gate is None or manifest is None or state is None:
         fail(f"{name} transcript event schema was not checked against the run")
+    project = manifest.get("project")
+    presentation = state.get("presentation")
+    if not isinstance(project, dict) or not isinstance(presentation, dict):
+        fail(f"{name} transcript cannot bind invalid manifest or review state")
+    expected_argv = [
+        [
+            "scripts/alignment", "init", "<run-dir>",
+            "--project-id", project.get("id"), "--title", project.get("title"),
+        ],
+        ["scripts/alignment", "snapshot", "<run-dir>", "--json"],
+        [
+            "scripts/alignment", "issue-review", "<run-dir>",
+            "--adapter", presentation.get("adapter"),
+            "--status", presentation.get("status"),
+            "--location", presentation.get("location"),
+        ],
+        ["scripts/alignment", "check", "<run-dir>", "--json"],
+    ]
+    for operation, command, expected in zip(DOSSIER_OPERATIONS, commands, expected_argv):
+        if command["argv"] != expected:
+            fail(f"{name} transcript {operation} argv does not match run evidence")
     snapshot_output = results[1]["output"]
     gate_output = results[3]["output"]
+    if results[0]["output"] != {"alignment": "alignment"}:
+        fail(f"{name} transcript init result does not match the initialized dossier")
     if snapshot_output != {"algorithm": snapshot.algorithm, "digest": snapshot.digest, "paths": snapshot.paths}:
         fail(f"{name} transcript snapshot result does not match the current dossier")
     if results[2]["output"] != {"algorithm": "sha256-v1", "digest": snapshot.digest}:
@@ -236,6 +263,22 @@ def validate_transcript(name: str, run_dir: Path, text: str,
     expected_gate = {"digest": actual_gate.digest, "ready": actual_gate.ready, "reasons": actual_gate.reasons}
     if gate_output != expected_gate:
         fail(f"{name} transcript gate result does not match the helper replay")
+
+
+def validate_result_mechanics(name: str, captured: List[str], site_reference: str,
+                              snapshot: Any, actual_gate: Any) -> None:
+    """Reject mechanical claims in result.json that contradict checked evidence."""
+    text = "\n".join(captured)
+    for digest in re.findall(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", text):
+        if digest != snapshot.digest:
+            fail(f"{name} result record contains a stale or fabricated digest")
+    for location in re.findall(r"alignment-review/[A-Za-z0-9._/-]+\.json", text):
+        if location != site_reference:
+            fail(f"{name} result record contains a Site location contradiction")
+    if "ready=" in text.lower() and "ready=false" not in text.lower():
+        fail(f"{name} result record contradicts the blocked helper gate")
+    if "reasons=" in text and f"reasons={actual_gate.reasons!r}" not in text:
+        fail(f"{name} result record contains gate reasons that contradict the helper")
 
 
 def fixture_dossier(directory: str) -> Path:
@@ -346,12 +389,35 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
         and presentation.get("rendered_hash") == snapshot.digest
     ):
         fail(f"{name} Site, issued snapshot, rendered hash, and dossier snapshot diverge")
+    manifest = load_json(alignment / "manifest.yaml")
+    renderer = manifest.get("renderer") if isinstance(manifest, dict) else None
+    expected_renderer = {
+        "adapter": presentation.get("adapter"),
+        "status": presentation.get("status"),
+        "location": presentation.get("location"),
+        "rendered_hash": presentation.get("rendered_hash"),
+    }
+    if renderer != expected_renderer or site_reference != presentation.get("location"):
+        fail(f"{name} manifest, Site reference, and issued presentation diverge")
+    project = manifest.get("project")
+    site_project = site.get("project")
+    if not isinstance(project, dict) or not isinstance(site_project, dict):
+        fail(f"{name} manifest or Site project identity is invalid")
+    if (("id" in site_project and site_project["id"] != project.get("id"))
+            or ("title" in site_project and site_project["title"] != project.get("title"))
+            or ("name" in site_project and site_project["name"] != project.get("title"))):
+        fail(f"{name} Site project identity contradicts the manifest")
     actual_gate = check_gate(alignment)
     if actual_gate.ready or gate != "blocked" or record["gate_reasons"] != actual_gate.reasons:
         fail(f"{name} claimed gate does not match the current helper gate")
+    if (state.get("decision") != {} or state.get("handoff") != {}
+            or (alignment / "handoff.md").exists()
+            or presentation.get("status") == "published"):
+        fail(f"{name} result flags contradict approval, handoff, or publication evidence")
+    validate_result_mechanics(name, captured, site_reference, snapshot, actual_gate)
     validate_transcript(
         name, run_dir, transcript.read_text(encoding="utf-8"),
-        record["evidence_files"], site_reference, snapshot, actual_gate,
+        record["evidence_files"], site_reference, snapshot, actual_gate, manifest, state,
     )
     required, forbidden, expected_gate = expected_for(name)
     if expected_gate != gate:

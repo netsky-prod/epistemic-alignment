@@ -287,6 +287,85 @@ class EvalTests(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def test_checker_rejects_init_argv_and_result_not_bound_to_manifest(self):
+        for mutation in ("project-id", "result"):
+            with self.subTest(mutation=mutation):
+                temporary, run, results_path = self.copied_run("existing-repo")
+                try:
+                    transcript = run / "transcript.md"
+                    text = transcript.read_text(encoding="utf-8")
+                    if mutation == "project-id":
+                        text = text.replace(
+                            '"--project-id","existing-repo-export"',
+                            '"--project-id","nonexistent-project"',
+                        )
+                    else:
+                        text = text.replace(
+                            '"output":{"alignment":"alignment"}',
+                            '"output":{"alignment":"fabricated"}',
+                        )
+                    transcript.write_text(text, encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+    def test_checker_rejects_impossible_argv_and_issue_location(self):
+        for mutation in ("extra-snapshot-flag", "issue-location"):
+            with self.subTest(mutation=mutation):
+                temporary, run, results_path = self.copied_run("critical-unknown")
+                try:
+                    transcript = run / "transcript.md"
+                    text = transcript.read_text(encoding="utf-8")
+                    if mutation == "extra-snapshot-flag":
+                        text = text.replace(
+                            '"snapshot","<run-dir>","--json"]',
+                            '"snapshot","<run-dir>","--json","--fabricated"]',
+                        )
+                    else:
+                        text = text.replace(
+                            '"--location","alignment-review/site-review.json"]',
+                            '"--location","alignment-review/not-issued.json"]',
+                        )
+                    transcript.write_text(text, encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+    def test_checker_rejects_manifest_renderer_location_contradiction(self):
+        temporary, run, results_path = self.copied_run("existing-repo")
+        try:
+            manifest_path = run / "alignment/manifest.yaml"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["renderer"]["location"] = "alignment-review/not-issued.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_stale_digest_in_result_record(self):
+        temporary, run, results_path = self.copied_run("conflict")
+        try:
+            record_path = run / "result.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record["captured_output"].append("snapshot -> sha256-v1:" + "f" * 64)
+            record_path.write_text(json.dumps(record), encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_command_result_bound_to_wrong_evidence(self):
+        temporary, run, results_path = self.copied_run("greenfield")
+        try:
+            transcript = run / "transcript.md"
+            text = transcript.read_text(encoding="utf-8").replace(
+                '"evidence":["alignment/review-state.json"],"action_id":"A003"',
+                '"evidence":["alignment/manifest.yaml"],"action_id":"A003"',
+            )
+            transcript.write_text(text, encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
 
 if __name__ == "__main__":
     unittest.main()

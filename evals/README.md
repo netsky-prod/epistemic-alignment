@@ -12,10 +12,18 @@ Run the checker from the repository root:
 scripts/check-evals artifacts/evals/results.json
 ```
 
-`evals/expected/` contains assertions; `artifacts/evals/results.json` contains
-captured output separately. Semantic captures cite the Task 4 fresh-context
-baseline/forward outcome record; no raw Task 4 transcript is recreated here.
-They are evidence about those recorded runs, not a claim that this checker
-replayed a hosted Site or authenticated a human. The checker rejects a
-forbidden claim appearing in captured output and re-executes the stale-approval
-and self-approval fixtures with the standard-library helper.
+`evals/expected/` contains assertions and `artifacts/evals/results.json` points
+to five checked-in isolated runs: greenfield, existing repository, stakeholder
+conflict, critical unknown, and bounded skip. Each run contains its captured
+result plus a strict Markdown transcript made of sequential `json-event`
+records. Dossier-run events record normalized CLI argv/results, declared local
+evidence, the generated review-surface reference, and the final gate outcome.
+
+The checker binds those mechanical records back to the run: init arguments to
+the manifest project, snapshot output to a freshly recomputed digest, review
+issuance to `review-state.json` and the Site reference, and gate/result claims
+to a fresh helper check. It also scans the complete authored run evidence for
+forbidden claims. This verifies recorded mechanics and artifact integrity; it
+does not parse dossier semantics, certify requirement quality, replay a hosted
+Site, or authenticate a human. The stale-approval and self-approval cases are
+separate deterministic fixtures re-executed with the standard-library helper.

@@ -21,9 +21,9 @@
     "decisions/ADR-001.md"
   ],
   "renderer": {
-    "adapter": null,
-    "status": "not_generated",
-    "location": null,
-    "rendered_hash": null
+    "adapter": "codex-sites",
+    "status": "presented",
+    "location": "alignment-review/site-review.json",
+    "rendered_hash": "a4f6ae31caa93949e9909a70978279333e49a8bb5145da86b1d82920fc34d494"
   }
 }

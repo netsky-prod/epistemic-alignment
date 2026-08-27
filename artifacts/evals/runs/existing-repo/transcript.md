@@ -9,7 +9,7 @@ Each record follows the mechanical eval event schema; it does not certify dossie
 {"id":"E002","role":"human","type":"human-answer","evidence":[],"body":"The goal was confirmed, retention remained open, and no current explicit approval was supplied."}
 ```
 ```json-event
-{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","health-data-import","--title","Health Data Import Alignment"]}
+{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","existing-repo-export","--title","Health-data import alignment"]}
 ```
 ```json-event
 {"id":"E004","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A001","exit_code":0,"output":{"alignment":"alignment"}}

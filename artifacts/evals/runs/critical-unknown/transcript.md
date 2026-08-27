@@ -9,7 +9,7 @@ Each record follows the mechanical eval event schema; it does not certify dossie
 {"id":"E002","role":"human","type":"human-answer","evidence":[],"body":"The product goal was confirmed, retention remained human-owned, and no current explicit approval was supplied."}
 ```
 ```json-event
-{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","critical-health-import","--title","Critical Health Data Import Alignment"]}
+{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","critical-unknown-import","--title","Health-data import alignment (critical unknown)"]}
 ```
 ```json-event
 {"id":"E004","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A001","exit_code":0,"output":{"alignment":"alignment"}}

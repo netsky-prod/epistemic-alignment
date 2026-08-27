@@ -9,7 +9,7 @@ Each record follows the mechanical eval event schema; it does not certify dossie
 {"id":"E002","role":"human","type":"human-answer","evidence":[],"body":"Both positions are current, resolution belongs to the COO, and no current explicit approval was supplied."}
 ```
 ```json-event
-{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","conflict-export","--title","Irreversible Export and Cancellation Alignment"]}
+{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","conflict-export","--title","Irreversible export and cancellation alignment"]}
 ```
 ```json-event
 {"id":"E004","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A001","exit_code":0,"output":{"alignment":"alignment"}}

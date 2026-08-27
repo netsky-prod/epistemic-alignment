@@ -3,7 +3,7 @@
   "handoff": {},
   "presentation": {
     "adapter": "codex-sites",
-    "location": "alignment-review/site",
+    "location": "alignment-review/site-review.json",
     "presented_at": "2026-08-27T09:29:29Z",
     "rendered_hash": "25874ce3422d082e910b6ffb241130bf468350abb58455285aa89a4a9afffbf7",
     "status": "presented"
