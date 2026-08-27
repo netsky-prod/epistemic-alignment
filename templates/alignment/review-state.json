@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0",
-  "validation": {"status": "not_run", "blockers": [], "warnings": []},
-  "presentation": {"status": "not_generated", "adapter": null, "location": null, "rendered_hash": null, "presented": false},
-  "review": {"issued_hash": null, "issued_at": null},
-  "decision": {"value": null, "reviewer": null, "provenance": null, "decided_at": null, "review_hash": null, "acknowledged_warnings": []},
-  "handoff": {"verified_hash": null, "created_at": null}
+  "snapshot": {},
+  "presentation": {},
+  "decision": {},
+  "handoff": {}
 }

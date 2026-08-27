@@ -4,23 +4,28 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from epistemic_alignment.artifacts import initialize, load_artifact_set
+from epistemic_alignment.artifacts import initialize, load_dossier
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class InitializationTests(unittest.TestCase):
-    def test_init_creates_parseable_resumable_package(self):
+    def test_init_creates_thin_resumable_dossier(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             alignment_dir = initialize(root, "checkout", "Checkout redesign")
-            artifacts = load_artifact_set(alignment_dir)
-            self.assertEqual(artifacts.manifest["schema_version"], "1.0")
-            self.assertEqual(artifacts.manifest["project"]["id"], "checkout")
-            self.assertEqual(artifacts.manifest["current_phase"], "discover")
+            dossier = load_dossier(alignment_dir)
+            self.assertEqual(dossier.manifest["schema_version"], "1.0")
+            self.assertEqual(dossier.manifest["project"]["id"], "checkout")
+            self.assertEqual(dossier.manifest["current_phase"], "discover")
+            self.assertEqual(
+                dossier.manifest["snapshot_paths"],
+                dossier.snapshot_paths,
+            )
+            self.assertIn("review.md", dossier.snapshot_paths)
             state = json.loads((alignment_dir / "review-state.json").read_text())
-            self.assertEqual(state["decision"]["value"], None)
+            self.assertEqual(state["decision"], {})
             self.assertFalse((alignment_dir / "handoff.md").exists())
 
     def test_init_refuses_to_overwrite_existing_alignment(self):
@@ -35,9 +40,9 @@ class InitializationTests(unittest.TestCase):
             root = Path(directory)
             project_id = 'checkout\\next\niteration'
             title = 'The "new" checkout\nredesign'
-            artifacts = load_artifact_set(initialize(root, project_id, title))
-            self.assertEqual(artifacts.manifest["project"]["id"], project_id)
-            self.assertEqual(artifacts.manifest["project"]["title"], title)
+            dossier = load_dossier(initialize(root, project_id, title))
+            self.assertEqual(dossier.manifest["project"]["id"], project_id)
+            self.assertEqual(dossier.manifest["project"]["title"], title)
 
     def test_cli_initializes_requested_root(self):
         with tempfile.TemporaryDirectory() as directory:

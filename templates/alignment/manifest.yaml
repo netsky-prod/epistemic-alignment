@@ -3,7 +3,7 @@
   "project": {"id": "__PROJECT_ID__", "title": "__PROJECT_TITLE__"},
   "current_phase": "discover",
   "completed_phases": [],
-  "artifacts": [
+  "snapshot_paths": [
     "charter.md",
     "stakeholders.md",
     "glossary.md",
@@ -12,9 +12,7 @@
     "architecture/context.md",
     "architecture/containers.md",
     "architecture/components.md",
-    "review-state.json"
+    "review.md"
   ],
-  "renderer": {"adapter": null, "status": "not_generated", "location": null, "rendered_hash": null},
-  "last_validation": null,
-  "review_hash": null
+  "renderer": {"adapter": null, "status": "not_generated", "location": null, "rendered_hash": null}
 }

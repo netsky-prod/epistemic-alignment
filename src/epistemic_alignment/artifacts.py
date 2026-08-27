@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict
 
-from .models import ArtifactSet, Entity
+from .models import Dossier
 
 
 TEMPLATE_ROOT = Path(__file__).resolve().parents[2] / "templates" / "alignment"
@@ -35,24 +35,19 @@ def initialize(target_root: Path, project_id: str, title: str) -> Path:
     return alignment_dir
 
 
-def _front_matter(path: Path) -> Dict[str, Any]:
-    content = path.read_text(encoding="utf-8")
-    if not content.startswith("---\n"):
-        return {}
-    _, metadata, _ = content.split("---\n", 2)
-    return json.loads(metadata)
-
-
-def load_artifact_set(alignment_dir: Path) -> ArtifactSet:
+def load_dossier(alignment_dir: Path) -> Dossier:
     manifest = json.loads((alignment_dir / "manifest.yaml").read_text(encoding="utf-8"))
-    entities = {}
-    for path in alignment_dir.rglob("*.md"):
-        for entity_data in _front_matter(path).get("entities", []):
-            entity = Entity(**entity_data)
-            entities[entity.id] = entity
-    return ArtifactSet(
+    if manifest.get("schema_version") != "1.0":
+        raise ValueError("unsupported manifest schema version")
+
+    snapshot_paths = manifest.get("snapshot_paths")
+    if not isinstance(snapshot_paths, list) or not all(
+        isinstance(path, str) for path in snapshot_paths
+    ):
+        raise ValueError("manifest snapshot_paths must be a list of strings")
+
+    return Dossier(
         root=alignment_dir,
         manifest=manifest,
-        entities=entities,
-        files=sorted(path for path in alignment_dir.rglob("*") if path.is_file()),
+        snapshot_paths=snapshot_paths,
     )
