@@ -1,29 +1,107 @@
 ---
 name: approve-handoff
-description: Use when a stakeholder has reviewed an issued alignment presentation and may provide a current explicit decision on the exact snapshot.
+description: Use when a stakeholder has inspected an issued alignment presentation, may provide a current decision, or an already verified handoff is awaiting delivery into Superpowers.
 ---
 
 # Approve Handoff
 
-Record an explicit human decision for the snapshot the stakeholder actually reviewed.
+Convert a current human decision into a mechanically bound handoff without making the human operate the hash protocol. Approval means “this dossier is an adequate basis for downstream brainstorming,” not “the implementation is correct” or “all uncertainty is gone.”
 
 ## Contract
 
-Input: either an existing `alignment/handoff.md` awaiting delivery, or a presented review reference, `alignment/review.md`, issued snapshot state, and a current human message. Output: either a recorded non-approval outcome, verified `alignment/handoff.md`, or that verified handoff with delivery pending. Read [thin approval](../../references/approval.md).
+Input: absolute project root; issued presentation; current dossier/review state; visible findings; either a current human reply or an existing verified handoff awaiting delivery.
 
-## Pending Delivery Resume
+Output: `changes_requested`, `rejected`, a verified `alignment/handoff.md`, or a verified handoff whose delivery is explicitly pending.
 
-Before normal approval, if `alignment/handoff.md` exists, run the read-only `scripts/alignment check <root> --json` as a mandatory fresh-context check.
+Use [installed resources](../../references/installed-resources.md) and [thin approval](../../references/approval.md). All helper commands use the resolved absolute `$ALIGNMENT_HELPER`; never assume `scripts/alignment` exists in the target project.
 
-- When the check returns `ready: true`, the existing handoff is verified for the current dossier. Do not ask for a decision, do not run `scripts/alignment decide`, and do not run `scripts/alignment handoff` or regenerate the handoff. If `superpowers:brainstorming` is available, deliver the existing handoff and dossier to it. If `superpowers:brainstorming` is unavailable, leave the verified `alignment/handoff.md` and approval state untouched. Report delivery pending with the exact `alignment/handoff.md` path, and resume the transition when `superpowers:brainstorming` becomes available.
-- When the check is not ready or cannot verify freshness, do not deliver. Return to presentation and reapproval with the normal existing mechanics; the old handoff is not authority for the changed dossier.
+## Resume before asking again
 
-## Normal Approval
+If `alignment/handoff.md` already exists, do not restart approval automatically.
 
-1. Inspect `review-state.json`, `review.md`, presentation location, and `scripts/alignment snapshot <root> --json`. Verify every current reviewable dossier file is listed in manifest `snapshot_paths` before issue-review; restart at presentation if membership or the current snapshot differs from the issued hash.
-2. Show the human the Site or other review reference, `review.md` findings and dispositions, and the current snapshot hash. Ask one direct question for `approved`, `changes_requested`, or `rejected`. The human does not need to repeat or copy the digest in the reply.
-3. Accept approval only from an explicit human message in the current interaction. The agent binds that reply internally to the current issued digest, then runs `scripts/alignment decide <root> --decision approved --reviewer <label> --provenance human-message --review-hash <hash> --acknowledged-finding ID [--acknowledged-finding ID ...]`; use the same command with the current decision value for other outcomes. Never bind a reply to a superseded issuance or infer a decision from an ambiguous message.
-4. For `changes_requested`, return to the relevant authoring skill; for `rejected`, report closure without handoff. For `approved`, run `scripts/alignment check <root> --json`, then `scripts/alignment handoff <root>` only when ready.
-5. After the handoff is verified, transition with it and the dossier only if `superpowers:brainstorming` is available. If `superpowers:brainstorming` is unavailable, use the same delivery-pending reporting and preservation behavior above. Do not regenerate the handoff or mutate approval state merely because delivery is pending.
+1. Run `"$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json`.
+2. If not ready, do not deliver the old handoff. Explain which source/state changed and return to presentation/reapproval.
+3. If ready and Superpowers is unavailable, preserve all bytes and state; report `delivery pending` with the exact handoff path.
+4. If ready and Superpowers is available, read the handoff and all dossier paths it names, then run the check again. Only an unchanged final check may enter `superpowers:brainstorming`.
+5. Never ask for another decision, rerun `decide`, or regenerate handoff merely because delivery was delayed.
 
-Agents must never self-approve: silence, generic prior permission, a Site button, agent confidence, and a pre-edited state file are not an explicit human message. The current snapshot must remain unchanged. Next transition when available: `superpowers:brainstorming` with `handoff.md` and the dossier.
+## Prepare the decision request
+
+Before asking the human:
+
+1. Read `review-state.json`, `review.md`, presentation location, and current snapshot.
+2. Confirm the presentation is the issued view of the same current snapshot.
+3. Confirm every reviewable artifact is in `snapshot_paths`.
+4. Summarize open/material findings, accepted limitations, and what approval unlocks.
+5. Make clear that approval does not certify semantics, security, estimates, or implementation details.
+
+Ask one direct question:
+
+> Do you approve this reviewed dossier as the basis for downstream brainstorming, request changes, or reject it?
+
+Accept natural explicit replies equivalent to `approved`, `changes_requested`, or `rejected`. The human does not need to repeat a digest, reviewer label, CLI flag, or finding ID.
+
+## Authority rules
+
+A valid decision must be:
+
+- from a human in the current interaction;
+- explicit rather than inferred;
+- about the currently presented dossier;
+- made after the stakeholder had access to the presentation and findings.
+
+Invalid authority includes silence, “looks interesting,” generic earlier permission, approval of the plugin design rather than this dossier, a Site button, agent confidence, edited state, a test fixture, or replay of a historical decision after a new issuance.
+
+If the reply is ambiguous, ask a short clarification. Never steer the person toward approval.
+
+## Bind the human reply internally
+
+The agent—not the human—reads the issued digest and translates the decision to the helper:
+
+```sh
+"$ALIGNMENT_HELPER" decide "$PROJECT_ROOT" \
+  --decision <approved|changes_requested|rejected> \
+  --reviewer "<honest human label>" \
+  --provenance human-message \
+  --review-hash <current-issued-digest> \
+  --acknowledged-finding <ID>
+```
+
+Repeat `--acknowledged-finding` for each finding the human explicitly accepts. Do not acknowledge findings on their behalf. Bind only to the existing issued digest; do not issue a new review after receiving the reply and then reuse the old reply.
+
+## Outcomes
+
+### Changes requested
+
+Record the decision, summarize requested changes in canonical artifacts, identify the earliest affected phase, and route there. Any later presentation requires a new issuance and new decision. Produce no handoff.
+
+### Rejected
+
+Record closure and the stated reason when supplied. Do not generate handoff or treat rejection as a request for autonomous redesign.
+
+### Approved
+
+Run:
+
+```sh
+"$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json
+"$ALIGNMENT_HELPER" handoff "$PROJECT_ROOT"
+"$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json
+```
+
+Continue only when the gate reports ready and the generated handoff is verified for the unchanged dossier. Never create, repair, or edit approval hashes or handoff metadata manually.
+
+## Delivery into Superpowers
+
+The downstream consumer must read:
+
+- `alignment/handoff.md`;
+- manifest and every included dossier path;
+- `alignment/review.md` and acknowledged findings;
+- stated assumptions, contradictions, and open questions.
+
+Then recheck the gate immediately before doing downstream creative work. If stale, consume nothing as approved authority and return to presentation/reapproval.
+
+Invoke `superpowers:brainstorming` with the dossier as required context. The handoff constrains and informs brainstorming; it does not skip Superpowers' own design conversation or authorize implementation.
+
+Add `approval` to `completed_phases` only through canonical artifact updates that do not alter the approved snapshot after decision. Final response names the human outcome, handoff/delivery status, exact next skill, and any accepted limitation—without asking the human to handle hashes.

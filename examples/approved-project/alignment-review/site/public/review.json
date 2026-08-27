@@ -22,6 +22,22 @@
         "status": "proposed",
         "source": "alignment/charter.md#goals"
       }
+    ],
+    "evidence": [
+      {"source": "alignment/manifest.yaml", "status": "confirmed", "excerpt": "The manifest identifies Approved Release Handoff and lists the exact human-authored files protected by the reviewed snapshot.", "related": ["snapshot"]},
+      {"source": "alignment/charter.md", "status": "confirmed", "excerpt": "The release dossier must expose intent, evidence, responsibility, and unresolved risk before implementation brainstorming begins.", "related": ["GOAL-001", "GOAL-002"]},
+      {"source": "alignment/charter.md#goals", "status": "confirmed", "excerpt": "The goals are verified release intent and a human-owned decision on the unchanged presented dossier.", "related": ["GOAL-001", "GOAL-002"]},
+      {"source": "alignment/stakeholders.md#stk-001", "status": "confirmed", "excerpt": "The release sponsor has decision authority for the presented dossier and its acknowledged limitations.", "related": ["STK-001"]},
+      {"source": "alignment/stakeholders.md#stk-004", "status": "confirmed", "excerpt": "The service operator needs visible rollback ownership and operational risk rather than a false completeness claim.", "related": ["STK-004"]},
+      {"source": "alignment/use-cases/UC-001.md", "status": "confirmed", "excerpt": "The sponsor reviews canonical evidence and findings; only an explicit decision on the unchanged issuance can unlock handoff.", "related": ["UC-001"]},
+      {"source": "alignment/features/release-handoff.feature#SCN-001", "status": "confirmed", "excerpt": "A current explicit human approval produces a matching handoff only while issued, rendered, approved, and current snapshots remain identical.", "related": ["SCN-001"]},
+      {"source": "alignment/features/release-handoff.feature#SCN-002", "status": "confirmed", "excerpt": "Changing any included dossier file after approval makes the decision stale and blocks handoff until a new review.", "related": ["SCN-002"]},
+      {"source": "alignment/architecture/context.md", "status": "confirmed", "excerpt": "Epistemic Alignment presents evidence to the sponsor and passes only a verified dossier to Superpowers for downstream brainstorming.", "related": ["C4 context"]},
+      {"source": "alignment/architecture/containers.md", "status": "confirmed", "excerpt": "Canonical dossier artifacts carry semantic meaning; the derived Site and thin helper have presentation and integrity responsibilities only.", "related": ["C4-001"]},
+      {"source": "alignment/architecture/components.md", "status": "confirmed", "excerpt": "The thin gate hashes included paths and checks freshness without judging requirements, BDD, C4, or consensus.", "related": ["C4-002"]},
+      {"source": "alignment/decisions/ADR-001.md", "status": "confirmed", "excerpt": "Approval stays in the host conversation; the review Site remains read-only and cannot impersonate a stakeholder decision.", "related": ["ADR-001"]},
+      {"source": "alignment/assumptions.md#assumptions", "status": "proposed", "excerpt": "The sponsor is assumed able to inspect the local review surface in the current interaction; public hosting is not required.", "related": ["ASM-001"]},
+      {"source": "alignment/review.md#finding-001--reviewer-label-is-not-authenticated", "status": "accepted limitation", "excerpt": "Reviewer labels are descriptive rather than authenticated; regulated or quorum workflows require an external identity/signature system.", "related": ["FINDING-001", "RISK-001"]}
     ]
   },
   "stakeholders": [

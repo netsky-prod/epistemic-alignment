@@ -1,21 +1,101 @@
 ---
 name: build-review
-description: Use when a reviewed alignment dossier needs a stakeholder-facing presentation that exposes evidence references, uncertainty, findings, and snapshot readiness.
+description: Use when a semantically reviewed dossier needs a stakeholder-facing presentation that makes the proposed understanding, evidence, uncertainty, architecture, findings, and decision boundary easy to inspect.
 ---
 
 # Build Review
 
-Render a derived review surface while keeping dossier files canonical. Read [platform detection](../../references/platform-detection.md) and [thin approval](../../references/approval.md).
+Turn the canonical dossier into a decision-quality stakeholder review. The presentation must help a person understand and challenge the model; it is not a decorative report and never records approval.
 
 ## Contract
 
-Input: the current `alignment/` dossier, `review.md`, manifest, and `sha256-v1` snapshot. Output: a read-only draft presentation, its location, and an issued review snapshot. The presentation never records a decision or changes approval state.
+Input: current dossier, `review.md`, manifest, snapshot, target host capabilities, and any existing presentation.
 
-1. Inspect the dossier, `review.md`, manifest, and existing presentation state. Rebuild whenever the current snapshot or findings differ from the presented view. Verify every current reviewable dossier file is listed in manifest `snapshot_paths`.
-2. Detect the host. On Codex with Sites, copy `adapters/codex-site/template` to `alignment-review/site/`, read the dossier semantically, and replace `alignment-review/site/public/review.json`. Populate exactly these top-level keys: `project`, `summary`, `stakeholders`, `useCases`, `behavior`, `architecture`, `decisions`, `risks`, `findings`, and `snapshot`. This payload is presentation input, not a certificate or a canonical dossier.
-3. Include the current `sha256-v1` digest verbatim in `snapshot`; retain evidence references and IDs. Render all seven anchored views: summary, stakeholders, use cases, behavior, architecture, decisions-and-risks, and review-readiness. Provide working internal traceability links: use one deterministic, collision-safe stable source-to-anchor mapping for each `EvidenceReference` and its target in a rendered evidence index. Keep raw dossier source text visible, and verify every evidence href resolves to its corresponding target. Do not link to unserved `.md` or `.feature` routes. Keep proposed, uncertain, and conflicting material textually labelled; show findings above snapshot readiness; provide C4 Mermaid source with a textual fallback. Do not add approval controls, authentication, persistence, or database bindings.
-4. Build and inspect the draft with Sites. Confirm the displayed snapshot digest exactly equals `scripts/alignment snapshot <root> --json` for the content rendered. Do not publish or update a hosted Site during this step.
-5. Only after the rendered digest is exact and the draft is ready, run `scripts/alignment issue-review <root> --adapter codex-sites --status presented --location alignment-review/site`. The issued hash must be the exact snapshot hash displayed by the Site. For other hosts, create the equivalent derived presentation and use its adapter/location.
-6. Show the stakeholder the reference, `alignment/review.md` findings, and issued hash. Hosting or updating a Site requires separate explicit human consent. A draft, build, visual inspection, or Site control is never approval.
+Output: a read-only draft presentation, its location, an issued review snapshot, and one clear request for stakeholder review.
+
+Use [installed resources](../../references/installed-resources.md), [platform detection](../../references/platform-detection.md), [presentation method](../../references/presentation.md), and [thin approval](../../references/approval.md).
+
+Resolve the bundled Site template from `$ALIGNMENT_PLUGIN_ROOT/adapters/codex-site/template`; never look for it beneath the target project.
+
+## Preconditions
+
+1. Read the complete dossier and `review.md` semantically.
+2. Verify that every human-authored reviewable dossier file is in `snapshot_paths`.
+3. Rebuild when source files, findings, or current snapshot differ from the existing presentation.
+4. Do not hide open findings to make the presentation appear ready.
+
+If open blocking findings prevent meaningful review, present them explicitly and ask whether the stakeholder wants revision before issuance. A review Site may show unreadiness; it must not fabricate readiness.
+
+## Design the stakeholder narrative
+
+The presentation answers these questions in order:
+
+1. What problem and outcome are we aligning on?
+2. Who is affected, and who has authority?
+3. What are the priority actor goals and guarantees?
+4. What concrete examples define important behavior and boundaries?
+5. How are responsibilities divided and why?
+6. Which decisions, risks, assumptions, and contradictions remain?
+7. What did independent review find?
+8. What exactly would approval authorize—and what would it not authorize?
+
+Use progressive disclosure. The first screen should orient a stakeholder; deeper sections should expose evidence rather than overwhelm them with raw files.
+
+## Evidence model
+
+Every material summary claim carries a source path or stable ID. A traceability target must show:
+
+- the source path/ID;
+- a substantive human-readable excerpt or faithful presentation of the cited evidence;
+- its epistemic status where relevant: confirmed, proposed, assumed, conflicting, or open;
+- links to related goal/use-case/scenario/architecture/finding IDs.
+
+Do not make a link that merely scrolls to a duplicate path label. Do not link to unserved local Markdown routes. The Site is derived presentation data, so excerpts never replace canonical dossier files.
+
+## Codex Sites adapter
+
+On Codex with Sites:
+
+1. Copy the unbound bundled template to `$PROJECT_ROOT/alignment-review/site/`. Do not copy a maintainer deployment `project_id`.
+2. Populate `public/review.json` with exactly these top-level keys: `project`, `summary`, `stakeholders`, `useCases`, `behavior`, `architecture`, `decisions`, `risks`, `findings`, and `snapshot`.
+3. Put the evidence index beneath an existing nested key, preserving the ten-key contract. Include a substantive excerpt for every referenced source.
+4. Render seven anchored views: summary, stakeholders, use cases, behavior, architecture, decisions-and-risks, and review-readiness.
+5. Label proposed, uncertain, assumed, open, accepted, and conflicting material in visible text—not color alone.
+6. Show findings before readiness. Provide C4 Mermaid source plus a textual responsibility fallback.
+7. Keep all interaction read-only: navigation, expansion, filtering, and copy are allowed; approval buttons, authentication, comments, persistence, databases, and decision mutations are not.
+
+For Claude Artifacts, OpenCode/Qwen local preview, or Markdown fallback, preserve the same narrative, evidence, uncertainty, findings, and decision boundary using the host mechanism described in platform detection.
+
+## Inspect the draft
+
+Inspect content and presentation at desktop and narrow widths. Check:
+
+- headings and keyboard navigation;
+- text contrast and visible focus;
+- diagrams plus fallback text;
+- every evidence reference reaches substantive content;
+- no dossier path or user content became unsafe executable markup;
+- findings and uncertainty are not visually minimized;
+- the snapshot displayed is the current snapshot of the rendered source dossier.
+
+Do not publish or update a hosted Site without separate explicit human consent. Local build/preview and private draft inspection are not approval.
+
+## Issue the review
+
+After the draft is exact, run through the resolved bundled helper:
+
+```sh
+"$ALIGNMENT_HELPER" snapshot "$PROJECT_ROOT" --json
+"$ALIGNMENT_HELPER" issue-review "$PROJECT_ROOT" --adapter <adapter> --status presented --location <reference>
+```
+
+The displayed digest must equal the issued/current digest, but the human never needs to copy it. Add `presentation` to `completed_phases`, set `current_phase` to `approval`, and show the stakeholder:
+
+- presentation location;
+- open/material findings and accepted limitations;
+- a short statement of what approval means;
+- an invitation to inspect and request changes.
+
+A Site view, positive reaction, prior design permission, or absence of objections is not approval.
 
 Next transition: `alignment:approve-handoff`.

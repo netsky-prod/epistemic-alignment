@@ -25,16 +25,20 @@ machine assertions or release authority.
 
 ## Thin helper
 
-The launcher works from the plugin checkout or installed plugin cache:
+The agent resolves the launcher from the active installed skill, not from the
+target repository. Conceptually:
 
 ```sh
-scripts/alignment --version
+ALIGNMENT_PLUGIN_ROOT=<resolved installed plugin root>
+ALIGNMENT_HELPER="$ALIGNMENT_PLUGIN_ROOT/scripts/alignment"
+PROJECT_ROOT=<absolute target project root>
+"$ALIGNMENT_HELPER" --version
 ```
 
 Initialize once:
 
 ```sh
-scripts/alignment init <project-root> --project-id <id> --title <title>
+"$ALIGNMENT_HELPER" init "$PROJECT_ROOT" --project-id <id> --title <title>
 ```
 
 The initializer exits `0` on success and refuses to overwrite an existing
@@ -42,7 +46,7 @@ dossier with exit `2`. Author the dossier through the skills, then inspect the
 current mechanical snapshot:
 
 ```sh
-scripts/alignment snapshot <project-root> --json
+"$ALIGNMENT_HELPER" snapshot "$PROJECT_ROOT" --json
 ```
 
 Snapshot returns `0` and an `algorithm`, `digest`, and sorted `paths` array. An
@@ -61,7 +65,7 @@ human consent.
 Once the stakeholder has actually seen the review, issue it:
 
 ```sh
-scripts/alignment issue-review <project-root> \
+"$ALIGNMENT_HELPER" issue-review "$PROJECT_ROOT" \
   --adapter codex-sites --status presented --location alignment-review/site
 ```
 
@@ -73,7 +77,7 @@ Only then may the agent transcribe the decision and bound digest through the
 helper:
 
 ```sh
-scripts/alignment decide <project-root> \
+"$ALIGNMENT_HELPER" decide "$PROJECT_ROOT" \
   --decision approved \
   --reviewer "<human-provided label>" \
   --provenance human-message \
@@ -90,8 +94,8 @@ agent statement, or a Site interaction.
 ## Check and hand off
 
 ```sh
-scripts/alignment check <project-root> --json
-scripts/alignment handoff <project-root>
+"$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json
+"$ALIGNMENT_HELPER" handoff "$PROJECT_ROOT"
 ```
 
 `check` exits `0` with `ready: true` or `1` with stable mechanical reasons such
@@ -102,6 +106,9 @@ after the gate is ready, writes the exact approved digest into
 `alignment/handoff.md`, and records a SHA-256 binding to those exact handoff
 bytes; it exits `2` otherwise.
 
-The next step is `superpowers:brainstorming` with `handoff.md` and the dossier
-as required context. If Superpowers is unavailable, preserve the verified
-handoff and report delivery as pending rather than bypassing the dependency.
+The next step is `superpowers:brainstorming` with `handoff.md` and the complete
+dossier as required context. After reading those files, the agent checks the
+gate again immediately before brainstorming. If stale, it returns to
+presentation/reapproval. If Superpowers is unavailable, it preserves the
+verified handoff and reports delivery as pending rather than bypassing the
+dependency.

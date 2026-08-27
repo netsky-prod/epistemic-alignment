@@ -11,16 +11,20 @@ capabilities. It returns an adapter name/version, generated location or
 reference, `draft`/`presented`/`published` status, rendered digest, and warnings.
 
 All adapters must expose the same evidence, uncertainty, contradictions,
-questions, findings, and exact digest. Presentation is never approval. See the
-full [adapter contract](../adapters/adapter-contract.md).
+questions, findings, and exact digest. Every material summary links to a
+substantive evidence excerpt or served read-only source view—not merely a
+repeated path label. Presentation is never approval. See the full
+[adapter contract](../adapters/adapter-contract.md).
 
 ## Codex — version 0.1.0
 
-The production adapter copies `adapters/codex-site/template` to
+The production adapter resolves and copies the unbound installed
+`adapters/codex-site/template` to
 `alignment-review/site`, populates `public/review.json`, builds it with Sites,
-and visually checks desktop and narrow layouts. The Site is read-only and the
-host conversation remains the decision channel. Publication is optional,
-private by default, and requires explicit consent.
+and visually checks desktop and narrow layouts. It does not inherit a
+maintainer deployment ID. The Site is read-only and the host conversation
+remains the decision channel. Publication is optional, private by default, and
+requires explicit consent.
 
 ## Claude roadmap
 

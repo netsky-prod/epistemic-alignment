@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Expanded all eight alignment skills into complete agent workflows with
+  interview loops, epistemic discipline, phase completion criteria, recovery,
+  and explicit downstream transitions.
+- Replaced placeholder dossier files with stakeholder-ready discovery,
+  uncertainty, C4, and semantic-review templates.
+- Expanded Cockburn, BDD, C4/ADR, semantic-review, and presentation methods.
+- Added installed-resource resolution so skills separate plugin and project
+  roots.
+- Made Site evidence targets display substantive excerpts and removed the
+  maintainer deployment binding from the reusable template.
+
 All notable changes to Epistemic Alignment are documented here.
 
 ## 0.1.0 - 2026-08-27

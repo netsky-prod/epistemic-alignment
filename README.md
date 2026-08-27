@@ -6,15 +6,18 @@ It guides discovery, Cockburn use cases, BDD examples, C4 architecture, ADRs,
 semantic review, a stakeholder-facing review Site, explicit human approval,
 and a hash-verified handoff to Superpowers.
 
-The package deliberately keeps a thin deterministic boundary. Skills and
-people judge meaning; the dependency-free Python helper initializes files,
-hashes the reviewed snapshot, records a current human decision, rejects stale
-approval, and writes the handoff. It is not a requirements compiler or a
-semantic validator.
+The product is the agent workflow: eight substantial skills guide inquiry,
+goal modeling, examples, responsibility design, independent review, and a
+human decision. A thin dependency-free Python helper only initializes files,
+binds the reviewed snapshot to the current decision, rejects stale approval,
+and writes the handoff. It is not a requirements compiler or semantic
+validator.
 
 ## What is included
 
 - Eight `alignment:*` skills, with `alignment:align-project` as the front door.
+- Deep Cockburn, BDD, C4/ADR, epistemic-discovery, semantic-review, and
+  stakeholder-presentation methods.
 - A Python 3.9-compatible `scripts/alignment` helper with no third-party runtime
   dependencies.
 - Portable Markdown, Gherkin, Mermaid, and ADR templates.
@@ -44,6 +47,14 @@ lives in `alignment-review/site/`. Approval happens only in the host
 conversation; the Site has no approval button or persistence. After the Site,
 the stakeholder can reply simply `approved`, `changes_requested`, or
 `rejected`; the agent binds that reply to the current issued digest internally.
+
+## How installed skills use the helper
+
+Skills resolve the helper and Site template relative to their installed plugin
+path. They do not expect the target repository to contain this plugin's
+`scripts/` or `adapters/` directories. The commands below are the underlying
+interface; normal users interact with the agent and reply to the review in
+plain language.
 
 ## Helper commands
 

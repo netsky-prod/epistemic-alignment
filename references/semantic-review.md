@@ -1,18 +1,62 @@
-# Human semantic-review record
+# Human semantic-review method
 
-Read the dossier skeptically, then write `alignment/review.md`. Review by human judgment; findings are not a completion certificate.
+Semantic review challenges whether the dossier tells one coherent, evidence-backed story. It is performed with judgment and recorded for stakeholders; it is not a compiler or certificate.
 
-```markdown
-# Alignment review
+## Seven review lenses
 
-Reviewed snapshot: <sha256-v1 digest or pending>
+1. **Goals and authority:** outcomes, non-goals, stakeholders, conflicts, and decision rights.
+2. **Epistemic integrity:** facts/statements/inferences/assumptions remain distinct; contradictions and missing evidence are visible.
+3. **Use-case quality:** goal altitude, actor intent, guarantees, material extensions, and recovery.
+4. **Behavior coverage:** critical paths/rules/boundaries have observable examples; proposed behavior is labelled.
+5. **Architecture responsibility:** priority behavior has owners; boundaries, data, trust, failure, and operations are explained.
+6. **Decision quality:** material choices expose drivers, alternatives, consequences, risks, and invalidating assumptions.
+7. **Stakeholder readability:** a non-author can understand the proposal, uncertainty, findings, and requested decision.
 
-| ID | Finding | Evidence | Impact | Suggested owner | Disposition |
-| --- | --- | --- | --- | --- | --- |
-| RVW-001 | ... | file / ID | ... | ... | open|accepted|resolved |
+## Bidirectional traceability
 
-## Review scope
-<files and limits>
+Walk forward:
+
+```text
+stakeholder interest → goal → use case → scenario → responsibility → decision
 ```
 
-Look for unsupported goals, important paths without examples, unexplained responsibilities, decisions without consequences, contradictions, hidden assumptions, and critical unknowns. Preserve evidence and uncertainty; let a human decide whether findings are acceptable.
+Walk backward:
+
+```text
+container/component/ADR → scenario/risk → use case → stakeholder outcome
+```
+
+Missing links are findings when they hide rationale or leave behavior unowned. Cross-cutting concerns may link to several goals rather than exactly one.
+
+## Finding record
+
+```markdown
+| ID | Severity | Finding | Evidence | Impact | Owner / action | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| FINDING-001 | material | ... | `file#section`, `UC-001` | ... | ... | open |
+```
+
+- **Blocking:** meaningful stakeholder approval is not possible yet.
+- **Material:** approval may proceed only with visible resolution or accepted limitation.
+- **Advisory:** useful improvement that does not distort the decision boundary.
+
+Dispositions:
+
+- `open` — unresolved;
+- `accepted limitation` — human accepts named consequence;
+- `resolved` — source evidence changed and is linked;
+- `superseded` — replaced by a newer finding/decision.
+
+## Reviewer rules
+
+- Cite source artifacts, not only conclusions.
+- Explain stakeholder/architecture impact, not stylistic preference.
+- Repair substantive errors in canonical sources, then update the finding.
+- Preserve scope and missing perspectives.
+- Never convert “no findings observed” into proof of correctness.
+- Never close a contradiction by choosing the most convenient interpretation.
+- Separate implementation concerns that belong downstream from alignment gaps that block shared understanding.
+
+## Review output
+
+`alignment/review.md` contains scope/limits, readiness summary, findings, traceability gaps, epistemic gaps, and the stakeholder decision context. It should allow a person to accept a limitation knowingly, request a concrete revision, or reject the model.

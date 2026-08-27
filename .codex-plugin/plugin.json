@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Epistemic Alignment",
     "shortDescription": "Create an approved, traceable project understanding.",
-    "longDescription": "Guides teams from discovery through approved requirements, behavior, architecture, and a Superpowers handoff.",
+    "longDescription": "Guides agents and stakeholders through epistemic discovery, Cockburn use cases, BDD examples, C4 and ADRs, independent review, a read-only decision surface, and an explicit human-gated Superpowers handoff.",
     "developerName": "Epistemic Alignment contributors",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +29,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Align this project before implementation planning."
+      "Use alignment:align-project to establish a shared, evidence-backed understanding of this initiative before implementation planning. Preserve uncertainty and ask one material question at a time."
     ],
     "screenshots": [
       "./assets/site-desktop.png",
