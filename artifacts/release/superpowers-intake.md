@@ -25,7 +25,7 @@
 | 12 | `examples/approved-project/alignment/architecture/components.md` | `e7018b7688f28bfdab112494a6d69bd1dc5742a872d05001c1a9795037733844` |
 | 13 | `examples/approved-project/alignment/decisions/ADR-001.md` | `7471cc8c7e8c2e4b941180643b1fd02f19dcac785e01843c1f151cb0098134d0` |
 | 14 | `examples/approved-project/alignment/review.md` | `35897117bde4e962a2fb691332df30f09dcece66dfa5e4bc875cfdd87678c2f0` |
-| 15 | `examples/approved-project/alignment/review-state.json` | `346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75` |
+| 15 | `examples/approved-project/alignment/review-state.json` | `22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc` |
 
 ## Approved snapshot and gate
 
@@ -35,6 +35,9 @@
   - `scripts/alignment snapshot examples/approved-project/alignment` -> `sha256-v1:6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077`
   - `scripts/alignment check examples/approved-project/alignment` -> `6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077: ready`
 - Gate result: **ready**; the helper-generated handoff digest matches the current snapshot.
+- Round-3 metadata migration added the helper-computed handoff content SHA-256
+  to process state. It changed only `review-state.json`; the consumed handoff
+  bytes, approved dossier snapshot, and human decision remain unchanged.
 
 ## Brainstorming classification and boundary
 

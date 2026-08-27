@@ -1,5 +1,7 @@
+import hashlib
 import json
 import os
+import stat
 import tempfile
 import time
 from contextlib import contextmanager
@@ -17,6 +19,7 @@ _PRESENTATION_STATUSES = {"draft", "presented", "published"}
 _DECISIONS = {"approved", "changes_requested", "rejected"}
 _SNAPSHOT_ALGORITHM = "sha256-v1"
 _LOCK_NAME = ".alignment-gate.lock"
+_HANDOFF_PENDING_NAME = ".handoff-pending"
 _LOCK_TIMEOUT_SECONDS = 5
 
 
@@ -34,6 +37,10 @@ def _handoff_path(alignment_dir: Path) -> Path:
 
 def _handoff_backup_path(alignment_dir: Path) -> Path:
     return alignment_dir / ".handoff-backup"
+
+
+def _handoff_pending_path(alignment_dir: Path) -> Path:
+    return alignment_dir / _HANDOFF_PENDING_NAME
 
 
 @contextmanager
@@ -104,19 +111,26 @@ def _require_string_list(value: Any, name: str) -> List[str]:
     return value
 
 
+def _require_sha256(value: Any, name: str) -> str:
+    value = _require_text(value, name)
+    if len(value) != 64 or any(character not in "0123456789abcdef" for character in value):
+        raise ValueError(f"{name} must be a lowercase SHA-256 digest")
+    return value
+
+
 def _validate_issuance_state(state: Dict[str, Any]) -> None:
     snapshot = state["snapshot"]
     presentation = state["presentation"]
     if snapshot.get("algorithm") != _SNAPSHOT_ALGORITHM:
         raise ValueError("unsupported snapshot algorithm in review state")
-    _require_text(snapshot.get("digest"), "snapshot digest")
+    _require_sha256(snapshot.get("digest"), "snapshot digest")
     _require_string_list(snapshot.get("paths"), "snapshot paths")
     _require_text(snapshot.get("issued_at"), "snapshot issued_at")
     _require_text(presentation.get("adapter"), "presentation adapter")
     if presentation.get("status") not in _PRESENTATION_STATUSES:
         raise ValueError("unsupported presentation status in review state")
     _require_text(presentation.get("location"), "presentation location")
-    _require_text(presentation.get("rendered_hash"), "presentation rendered hash")
+    _require_sha256(presentation.get("rendered_hash"), "presentation rendered hash")
     _require_text(presentation.get("presented_at"), "presentation presented_at")
 
 
@@ -128,14 +142,65 @@ def _validate_complete_state(state: Dict[str, Any]) -> None:
     _require_text(decision.get("reviewer"), "decision reviewer")
     _require_text(decision.get("provenance"), "decision provenance")
     _require_text(decision.get("decided_at"), "decision decided_at")
-    _require_text(decision.get("review_hash"), "decision review hash")
+    _require_sha256(decision.get("review_hash"), "decision review hash")
     _require_string_list(decision.get("acknowledged_findings"), "acknowledged findings")
     handoff = state["handoff"]
     if handoff:
         if handoff.get("algorithm") != _SNAPSHOT_ALGORITHM:
             raise ValueError("unsupported handoff algorithm in review state")
-        _require_text(handoff.get("digest"), "handoff digest")
+        _require_sha256(handoff.get("digest"), "handoff digest")
+        _require_sha256(handoff.get("content_sha256"), "handoff content SHA-256")
         _require_text(handoff.get("verified_at"), "handoff verified_at")
+
+
+def _read_regular_handoff(path: Path) -> bytes:
+    try:
+        path_before = path.lstat()
+    except OSError as error:
+        raise ValueError("handoff file is unavailable") from error
+    if not stat.S_ISREG(path_before.st_mode):
+        raise ValueError("handoff path must be a regular non-symlink file")
+
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = None
+    try:
+        descriptor = os.open(str(path), flags)
+        opened_before = os.fstat(descriptor)
+        if not stat.S_ISREG(opened_before.st_mode) or (
+            opened_before.st_dev,
+            opened_before.st_ino,
+        ) != (path_before.st_dev, path_before.st_ino):
+            raise ValueError("handoff path changed while opening")
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = None
+            content = stream.read()
+            opened_after = os.fstat(stream.fileno())
+        if (
+            opened_after.st_dev,
+            opened_after.st_ino,
+            opened_after.st_size,
+            opened_after.st_mtime_ns,
+            opened_after.st_ctime_ns,
+        ) != (
+            opened_before.st_dev,
+            opened_before.st_ino,
+            opened_before.st_size,
+            opened_before.st_mtime_ns,
+            opened_before.st_ctime_ns,
+        ):
+            raise ValueError("handoff file changed while reading")
+        path_after = path.lstat()
+        if not stat.S_ISREG(path_after.st_mode) or (
+            path_after.st_dev,
+            path_after.st_ino,
+        ) != (opened_after.st_dev, opened_after.st_ino):
+            raise ValueError("handoff path changed while reading")
+        return content
+    except OSError as error:
+        raise ValueError("handoff file is unavailable") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def _review_is_snapshotted(snapshot: Snapshot) -> bool:
@@ -152,6 +217,8 @@ def _remove_handoff(alignment_dir: Path) -> None:
 def _move_handoff_to_backup(alignment_dir: Path) -> Path:
     handoff_path = _handoff_path(alignment_dir)
     backup_path = _handoff_backup_path(alignment_dir)
+    if os.path.lexists(str(_handoff_pending_path(alignment_dir))):
+        raise ValueError("unresolved handoff transaction blocks state mutation")
     if os.path.lexists(str(backup_path)):
         raise ValueError("unresolved handoff backup blocks state mutation")
     if not os.path.lexists(str(handoff_path)):
@@ -272,7 +339,9 @@ def check_gate(alignment_dir: Path) -> GateResult:
     except ValueError:
         return GateResult(ready=False, reasons=["snapshot-invalid"], digest="")
 
-    if os.path.lexists(str(_handoff_backup_path(alignment_dir))):
+    if os.path.lexists(str(_handoff_backup_path(alignment_dir))) or os.path.lexists(
+        str(_handoff_pending_path(alignment_dir))
+    ):
         return GateResult(
             ready=False,
             reasons=["handoff-transaction-unresolved"],
@@ -305,19 +374,22 @@ def check_gate(alignment_dir: Path) -> GateResult:
     ):
         reasons.append("hash-mismatch")
     handoff = state["handoff"]
-    if handoff:
-        handoff_path = _handoff_path(alignment_dir)
-        if not handoff_path.is_file():
+    handoff_path = _handoff_path(alignment_dir)
+    handoff_exists = os.path.lexists(str(handoff_path))
+    if handoff_exists and not handoff:
+        reasons.append("handoff-state-missing")
+    elif handoff:
+        if not handoff_exists:
             reasons.append("handoff-file-missing")
         else:
             try:
-                content = handoff_path.read_text(encoding="utf-8")
-            except (OSError, UnicodeDecodeError):
-                reasons.append("handoff-digest-mismatch")
+                content = _read_regular_handoff(handoff_path)
+            except ValueError:
+                reasons.append("handoff-file-invalid")
             else:
                 if (
                     handoff["digest"] != current.digest
-                    or "sha256-v1:" + handoff["digest"] not in content
+                    or hashlib.sha256(content).hexdigest() != handoff["content_sha256"]
                 ):
                     reasons.append("handoff-digest-mismatch")
     return GateResult(ready=not reasons, reasons=reasons, digest=current.digest)

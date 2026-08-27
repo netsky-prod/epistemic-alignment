@@ -11,7 +11,10 @@ available. Actors were forbidden to modify files.
 
 This is application evidence for a process skill, not an authentication claim
 or semantic evaluator. Structured provenance and the byte hashes are in
-`approve-handoff-resume.json`.
+`approve-handoff-resume.json`. Round 3 migrated the approved example's process
+state to add the helper-computed `handoff.content_sha256`; the JSON records both
+the original actor-run state hash and the current replay-fixture state hash.
+The handoff bytes, dossier snapshot, and human decision did not change.
 
 ## RED — pre-fix skill
 
@@ -58,7 +61,7 @@ check, which returned:
 It delivered the existing handoff and dossier without running `decide` or
 `handoff`. Before/after SHA-256 values were byte-identical:
 
-- `review-state.json`: `346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75`
+- `review-state.json` after the round-3 metadata migration: `22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc`
 - `handoff.md`: `f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9`
 
 Stale thread `01a04507-4ff3-7b33-90a9-738d4833cbe7` ran the same check and

@@ -96,9 +96,11 @@ scripts/alignment handoff <project-root>
 
 `check` exits `0` with `ready: true` or `1` with stable mechanical reasons such
 as `decision-not-approved`, `presentation-not-presented`, `non-human-provenance`,
-`stale-approval`, or `hash-mismatch`. `handoff` exits `0` only after the gate is
-ready and writes the exact approved digest into `alignment/handoff.md`; it exits
-`2` otherwise.
+`stale-approval`, `hash-mismatch`, `handoff-state-missing`,
+`handoff-file-invalid`, or `handoff-digest-mismatch`. `handoff` exits `0` only
+after the gate is ready, writes the exact approved digest into
+`alignment/handoff.md`, and records a SHA-256 binding to those exact handoff
+bytes; it exits `2` otherwise.
 
 The next step is `superpowers:brainstorming` with `handoff.md` and the dossier
 as required context. If Superpowers is unavailable, preserve the verified

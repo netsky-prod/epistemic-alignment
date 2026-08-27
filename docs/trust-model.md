@@ -11,6 +11,8 @@ mechanics. This boundary is the central safety property of version 0.1.0.
 - A presentation has status `presented` or `published` before approval.
 - The stored approval provenance is `human-message`.
 - A later included-file change makes the approval stale and blocks handoff.
+- A generated handoff is a regular non-symlink file at the expected path whose
+  exact bytes match the `content_sha256` stored by the helper.
 
 ## What it does not prove
 
@@ -61,4 +63,6 @@ or decision state.
 A verified `handoff.md` proves only that the bytes in the included dossier
 match the snapshot a human explicitly approved. Superpowers must still use
 brainstorming, planning, TDD, review, and verification. The handoff is required
-context, not permission to skip downstream engineering controls.
+context, not permission to skip downstream engineering controls. Verification
+also binds the exact helper-generated handoff bytes; retaining the approved
+digest as text inside a modified or substituted handoff is insufficient.

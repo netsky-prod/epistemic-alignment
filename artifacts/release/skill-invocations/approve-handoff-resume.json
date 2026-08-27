@@ -6,27 +6,33 @@
   "baseline_commit": "40f62cf97cafd3cf6c667f64fdad07ddb231344f",
   "pre_fix_skill_sha256": "ec12c662fa2bfe1e3bc835fc3ab9607b926944c352f43254823377c608bd53d3",
   "green_skill_sha256": "cc6b5177bce1bfdfff43a8163b313ac5812aa1e7fec7d091a4871c65371b4d01",
+  "round3_contract_migration": {
+    "change": "added helper-computed handoff.content_sha256 without changing handoff bytes, dossier snapshot, or human decision",
+    "previous_review_state_sha256": "346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75",
+    "current_review_state_sha256": "22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc",
+    "handoff_sha256": "f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9"
+  },
   "fixture": {
     "source": "examples/approved-project/alignment",
     "disposable": true,
     "stale_mutation": "prepend one line to alignment/charter.md after approval",
     "ready": {
       "before": {
-        "review_state_sha256": "346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75",
+        "review_state_sha256": "22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc",
         "handoff_sha256": "f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9"
       },
       "after": {
-        "review_state_sha256": "346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75",
+        "review_state_sha256": "22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc",
         "handoff_sha256": "f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9"
       }
     },
     "stale": {
       "before": {
-        "review_state_sha256": "346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75",
+        "review_state_sha256": "22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc",
         "handoff_sha256": "f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9"
       },
       "after": {
-        "review_state_sha256": "346b771082c6ac4ed2d994ced98f0c66055a3f357bfb8b695e580eb790ff6e75",
+        "review_state_sha256": "22ca2e2f6d9bff69f2fafcc5daa0af727d3488bb0661747f6414e8ebed83f7fc",
         "handoff_sha256": "f2191d5e82bf673839e9e4ff71a85363e48d6857b5d97ef0be869fc4c35ccee9"
       }
     }

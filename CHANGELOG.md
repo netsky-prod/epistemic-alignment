@@ -7,7 +7,8 @@ All notable changes to Epistemic Alignment are documented here.
 - Added eight portable alignment skills covering qualification through an
   unchanged, human-approved Superpowers handoff.
 - Added the Python 3.9 standard-library snapshot and approval helper with
-  fail-closed path, state, provenance, and freshness checks.
+  fail-closed path, state, provenance, freshness, exact handoff-byte, and
+  interrupted-transaction checks.
 - Added the read-only Codex Sites adapter, seven dossier views, accessibility
   checks, and desktop/narrow release screenshots.
 - Added seven non-authoritative scenario examples: five captured semantic

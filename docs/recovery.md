@@ -58,8 +58,13 @@ when the stakeholder has actually been shown it.
 
 Rerun `scripts/alignment check <project-root> --json`. The helper fails closed
 if an approval transaction is unresolved, if the handoff file/state disagree,
-or if the snapshot changed. Resolve the reported mechanical state; never edit
-the hashes. Once `ready` is true, rerun `scripts/alignment handoff`.
+if the handoff is a symlink or non-regular file, if its exact bytes do not match
+the recorded `content_sha256`, or if the snapshot changed. A leftover
+`.handoff-pending` or `.handoff-backup` means an interrupted transaction; keep
+it fail-closed while inspecting whether the prior handoff must be restored.
+Never delete transaction evidence blindly, edit hashes, or substitute a file.
+Once the mechanical state is resolved and `ready` is true, rerun
+`scripts/alignment handoff`.
 
 ## Installed plugin not refreshing
 

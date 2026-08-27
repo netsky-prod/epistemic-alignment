@@ -113,7 +113,7 @@
     "status": "consumed",
     "skill": "superpowers:brainstorming",
     "evidence_path": "artifacts/release/superpowers-intake.md",
-    "evidence_sha256": "de260f0c5e7689e270ca1afe822fd7d4b12fccd6ea0ff9fd5b0f5a76c01f1ee9",
+    "evidence_sha256": "f11b3a4c213fea2a64f9e9432c1d29fb3ce30132da79550d025c29c650d4129e",
     "consumed_source_count": 15,
     "required_context": [
       "examples/approved-project/alignment/handoff.md",

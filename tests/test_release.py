@@ -354,6 +354,10 @@ class ReleaseTests(unittest.TestCase):
         )
         handoff = (alignment / "handoff.md").read_text()
         self.assertIn(f"Approved snapshot: sha256-v1:{current_hash}", handoff)
+        self.assertEqual(
+            state["handoff"]["content_sha256"],
+            sha256(alignment / "handoff.md"),
+        )
 
     def test_superpowers_intake_hashes_match_current_consumed_files(self):
         evidence = json.loads((ROOT / "artifacts/release/e2e.json").read_text())
