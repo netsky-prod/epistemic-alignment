@@ -12,6 +12,7 @@ Result: PASS
 - Statuses included visible text labels; sampled badge contrast ratios ranged from 5.56:1 to 6.49:1.
 - Review findings rendered before snapshot readiness.
 - C4 diagram rendered and retained a `C4 textual fallback` details block with source text.
+- Browser QA initially exposed a C4 caption hydration mismatch caused by `useId`; deterministic IDs fixed it, scoped rereview passed, and two fresh reloads produced no hydration warning.
 - No buttons, forms, inputs, selects, or textareas existed; the Site could not mutate approval.
 - Production build, rendered tests, lint, and Python suite passed before publication.
 - Private Sites deployment succeeded at https://epistemic-alignment-review-20260827.netsky-prod.chatgpt.site.
