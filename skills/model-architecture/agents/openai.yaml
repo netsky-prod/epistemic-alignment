@@ -1,0 +1,4 @@
+interface:
+  display_name: "Model Architecture"
+  short_description: "Explain behavior with C4 and ADRs"
+  default_prompt: "Use $model-architecture to model alignment behavior with C4 and ADRs."

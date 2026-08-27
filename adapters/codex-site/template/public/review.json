@@ -1,0 +1,50 @@
+{
+  "project": {"name": "Example alignment dossier", "source": "alignment/manifest.yaml"},
+  "summary": {
+    "title": "Alignment review: stakeholder-safe release handoff",
+    "detail": "A derived, read-only view of the current dossier. It preserves evidence, uncertainty, and review findings for a human decision.",
+    "source": "alignment/charter.md",
+    "goals": [
+      {"id": "G-01", "title": "Expose evidence before a decision", "detail": "Present goals, behavior, architecture, and findings without turning them into a semantic certificate.", "status": "confirmed", "source": "alignment/charter.md#goals"},
+      {"id": "G-02", "title": "Keep consent separate", "detail": "The Site presents; the host conversation carries the explicit human decision.", "status": "proposed", "source": "alignment/review.md"}
+    ],
+    "evidence": [
+      {"source": "alignment/manifest.yaml", "status": "confirmed", "excerpt": "The manifest identifies the project, current workflow phase, and exact human-authored files included in the reviewed snapshot.", "related": ["snapshot"]},
+      {"source": "alignment/charter.md", "status": "confirmed", "excerpt": "The charter defines the stakeholder problem, desired outcome, scope boundary, non-goals, constraints, and decision authority.", "related": ["G-01", "G-02"]},
+      {"source": "alignment/charter.md#goals", "status": "confirmed", "excerpt": "Stakeholders need inspectable evidence and visible uncertainty before deciding whether the dossier is an adequate basis for downstream work.", "related": ["G-01", "G-02"]},
+      {"source": "alignment/review.md", "status": "proposed", "excerpt": "Independent review records semantic gaps and accepted limitations for human judgment; it does not certify correctness.", "related": ["G-02"]},
+      {"source": "alignment/stakeholders.md#S-01", "status": "confirmed", "excerpt": "The review sponsor is accountable for deciding whether the presented evidence and limitations are sufficient for handoff.", "related": ["S-01"]},
+      {"source": "alignment/stakeholders.md#S-02", "status": "proposed", "excerpt": "The delivery team authors canonical artifacts and owns revisions requested during stakeholder review.", "related": ["S-02"]},
+      {"source": "alignment/use-cases/UC-01.md", "status": "confirmed", "excerpt": "The sponsor reviews goals, examples, responsibilities, decisions, and findings, then decides outside the Site.", "related": ["UC-01"]},
+      {"source": "alignment/features/review.feature#SC-01", "status": "confirmed", "excerpt": "When an open finding exists, the review presents it before snapshot readiness so the limitation cannot be hidden by a ready badge.", "related": ["SC-01"]},
+      {"source": "alignment/features/review.feature#SC-02", "status": "proposed", "excerpt": "Proposed, assumed, open, and conflicting claims remain visibly labelled in text wherever they appear.", "related": ["SC-02"]},
+      {"source": "alignment/architecture/context.md", "status": "confirmed", "excerpt": "The review Site is a read-only presentation between canonical dossier evidence and the human decision channel.", "related": ["C4 context"]},
+      {"source": "alignment/architecture/containers.md#C4-01", "status": "confirmed", "excerpt": "The presentation container renders supplied review data but owns no approval state or semantic authority.", "related": ["C4-01"]},
+      {"source": "alignment/architecture/components.md#C4-02", "status": "confirmed", "excerpt": "Canonical dossier files remain the source of truth; the derived Site can be rebuilt without changing them.", "related": ["C4-02"]},
+      {"source": "alignment/decisions/ADR-01.md", "status": "confirmed", "excerpt": "ADR-01 keeps approval outside the renderer so a Site interaction cannot impersonate a current human decision.", "related": ["ADR-01"]},
+      {"source": "alignment/review.md#findings", "status": "conflicting", "excerpt": "Open findings require explicit stakeholder judgment and may block handoff when they distort the decision boundary.", "related": ["R-01"]},
+      {"source": "alignment/review.md#F-01", "status": "proposed", "excerpt": "The stakeholder must decide whether the unresolved acceptance threshold is safe to carry into downstream design.", "related": ["F-01"]},
+      {"source": "alignment/review.md#F-02", "status": "conflicting", "excerpt": "Two source artifacts assign delivery ownership differently; decision authority must resolve the conflict.", "related": ["F-02"]}
+    ]
+  },
+  "stakeholders": [
+    {"id": "S-01", "title": "Review sponsor", "role": "Accountable stakeholder", "detail": "Assesses whether evidence supports a handoff decision.", "status": "confirmed", "source": "alignment/stakeholders.md#S-01"},
+    {"id": "S-02", "title": "Delivery team", "role": "Evidence contributors", "detail": "Maintains dossier artifacts and resolves review work.", "status": "proposed", "source": "alignment/stakeholders.md#S-02"}
+  ],
+  "useCases": [{"id": "UC-01", "title": "Review a handoff dossier", "detail": "A stakeholder inspects evidence and findings, then decides outside the Site.", "status": "confirmed", "source": "alignment/use-cases/UC-01.md"}],
+  "behavior": [
+    {"id": "SC-01", "title": "Findings remain visible", "detail": "Open findings appear before snapshot readiness.", "status": "confirmed", "source": "alignment/features/review.feature#SC-01"},
+    {"id": "SC-02", "title": "Uncertainty is not hidden", "detail": "Uncertain propositions carry visible text labels.", "status": "uncertain", "source": "alignment/features/review.feature#SC-02"}
+  ],
+  "architecture": {"c4Source": "C4Context\ntitle Alignment review context\nPerson(sponsor, \"Review sponsor\", \"Makes the explicit human decision\")\nSystem(site, \"Alignment review Site\", \"Read-only dossier presentation\")\nSystem_Ext(dossier, \"Canonical dossier files\", \"Source evidence\")\nRel(sponsor, site, \"reviews\")\nRel(site, dossier, \"presents excerpts from\")", "source": "alignment/architecture/context.md", "responsibilities": [
+    {"id": "C4-01", "title": "Review Site", "detail": "Renders supplied data and never writes approval.", "status": "confirmed", "source": "alignment/architecture/containers.md#C4-01"},
+    {"id": "C4-02", "title": "Canonical dossier", "detail": "Remains source of truth for review evidence.", "status": "confirmed", "source": "alignment/architecture/components.md#C4-02"}
+  ]},
+  "decisions": [{"id": "ADR-01", "title": "Keep renderer presentational", "detail": "The Site makes no semantic or approval claims.", "status": "confirmed", "source": "alignment/decisions/ADR-01.md"}],
+  "risks": [{"id": "R-01", "title": "Consent may be premature", "detail": "Open findings can block handoff.", "status": "conflicting", "source": "alignment/review.md#findings"}],
+  "findings": [
+    {"id": "F-01", "title": "Acceptance threshold unresolved", "detail": "Sponsor must decide whether it is sufficient.", "status": "uncertain", "source": "alignment/review.md#F-01"},
+    {"id": "F-02", "title": "Ownership conflicting", "detail": "Source artifacts name different owners.", "status": "conflicting", "source": "alignment/review.md#F-02"}
+  ],
+  "snapshot": {"algorithm": "sha256-v1", "digest": "example-current-dossier-hash", "status": "ready", "paths": ["manifest.yaml", "charter.md", "stakeholders.md", "use-cases/UC-01.md", "features/review.feature", "architecture/context.md", "architecture/containers.md", "architecture/components.md", "decisions/ADR-01.md", "review.md"]}
+}

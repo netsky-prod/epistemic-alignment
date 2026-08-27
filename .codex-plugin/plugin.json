@@ -1,0 +1,39 @@
+{
+  "name": "alignment",
+  "version": "0.1.0",
+  "description": "Build a shared, auditable understanding before implementation planning.",
+  "author": {
+    "name": "Epistemic Alignment contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "alignment",
+    "bdd",
+    "c4",
+    "discovery",
+    "human-approval",
+    "requirements",
+    "architecture",
+    "traceability",
+    "use-cases"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Epistemic Alignment",
+    "shortDescription": "Create an approved, traceable project understanding.",
+    "longDescription": "Guides agents and stakeholders through epistemic discovery, Cockburn use cases, BDD examples, C4 and ADRs, independent review, a read-only decision surface, and an explicit human-gated Superpowers handoff.",
+    "developerName": "Epistemic Alignment contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use alignment:align-project to establish a shared, evidence-backed understanding of this initiative before implementation planning. Preserve uncertainty and ask one material question at a time."
+    ],
+    "screenshots": [
+      "./assets/site-desktop.png",
+      "./assets/site-narrow.png"
+    ]
+  }
+}

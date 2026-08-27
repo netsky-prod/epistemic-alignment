@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Review"
+  short_description: "Build a stakeholder review presentation"
+  default_prompt: "Use $build-review to prepare an alignment review presentation."

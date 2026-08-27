@@ -1,2 +1,29 @@
 .worktrees/
 .superpowers/
+.DS_Store
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.egg-info/
+*.py[cod]
+htmlcov/
+
+# Node, Sites, and build output
+node_modules/
+.next/
+.vinext/
+dist/
+next-env.d.ts
+coverage/
+.wrangler/
+*.tsbuildinfo
+*.log
+
+# Nested template repositories and local secrets
+adapters/codex-site/template/.git/
+.env
+.env.*
+!.env.example
