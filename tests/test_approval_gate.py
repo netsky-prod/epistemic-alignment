@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 import epistemic_alignment.handoff as handoff_module
+import epistemic_alignment.approval as approval_module
 from epistemic_alignment.approval import check_gate, issue_review, record_decision
 from epistemic_alignment.handoff import write_handoff
 
@@ -32,6 +33,11 @@ class ApprovalGateTests(unittest.TestCase):
 
     def write_state(self, target, state):
         (target / "review-state.json").write_text(json.dumps(state), encoding="utf-8")
+
+    def assert_no_handoff_transition_artifacts(self, target):
+        self.assertFalse((target / ".handoff-backup").exists())
+        self.assertEqual(list(target.glob(".handoff-backup-*")), [])
+        self.assertEqual(list(target.glob(".handoff-*.tmp")), [])
 
     def test_unchanged_human_approved_presented_snapshot_can_handoff(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -269,6 +275,75 @@ class ApprovalGateTests(unittest.TestCase):
             self.assertEqual(failures, [])
             self.assertFalse((target / "handoff.md").exists())
             self.assertFalse(check_gate(target).ready)
+
+    def test_handoff_state_write_failure_removes_the_published_handoff(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            original_write = handoff_module._write_state
+            failed = False
+
+            def fail_handoff_state_once(alignment_dir, state):
+                nonlocal failed
+                if state["handoff"] and not failed:
+                    failed = True
+                    raise OSError("injected handoff state write failure")
+                original_write(alignment_dir, state)
+
+            with mock.patch.object(handoff_module, "_write_state", fail_handoff_state_once):
+                with self.assertRaises(OSError):
+                    write_handoff(target)
+
+            self.assertFalse((target / "handoff.md").exists())
+            self.assertEqual(self.state(target)["handoff"], {})
+            self.assert_no_handoff_transition_artifacts(target)
+
+    def test_issue_review_state_write_failure_restores_previous_handoff_and_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            handoff = write_handoff(target)
+            old_content = handoff.read_text(encoding="utf-8")
+            old_state = self.state(target)
+
+            with mock.patch.object(
+                approval_module,
+                "_write_state",
+                side_effect=OSError("injected issue state write failure"),
+            ):
+                with self.assertRaises(OSError):
+                    issue_review(target, "codex-sites", "presented", "site://replacement")
+
+            self.assertEqual(handoff.read_text(encoding="utf-8"), old_content)
+            self.assertEqual(self.state(target), old_state)
+            self.assert_no_handoff_transition_artifacts(target)
+
+    def test_record_decision_state_write_failure_restores_previous_handoff_and_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            handoff = write_handoff(target)
+            old_content = handoff.read_text(encoding="utf-8")
+            old_state = self.state(target)
+
+            with mock.patch.object(
+                approval_module,
+                "_write_state",
+                side_effect=OSError("injected decision state write failure"),
+            ):
+                with self.assertRaises(OSError):
+                    record_decision(
+                        target,
+                        "changes_requested",
+                        "owner",
+                        "human-message",
+                        old_state["snapshot"]["digest"],
+                        ["F-1"],
+                    )
+
+            self.assertEqual(handoff.read_text(encoding="utf-8"), old_content)
+            self.assertEqual(self.state(target), old_state)
+            self.assert_no_handoff_transition_artifacts(target)
 
     def test_state_updates_preserve_unrelated_sections_and_clear_old_handoff(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -32,6 +32,10 @@ def _handoff_path(alignment_dir: Path) -> Path:
     return alignment_dir / "handoff.md"
 
 
+def _handoff_backup_path(alignment_dir: Path) -> Path:
+    return alignment_dir / ".handoff-backup"
+
+
 @contextmanager
 def mutation_lock(alignment_dir: Path) -> Iterator[None]:
     lock_path = alignment_dir / _LOCK_NAME
@@ -145,6 +149,42 @@ def _remove_handoff(alignment_dir: Path) -> None:
         pass
 
 
+def _move_handoff_to_backup(alignment_dir: Path) -> Path:
+    handoff_path = _handoff_path(alignment_dir)
+    backup_path = _handoff_backup_path(alignment_dir)
+    if os.path.lexists(str(backup_path)):
+        raise ValueError("unresolved handoff backup blocks state mutation")
+    if not os.path.lexists(str(handoff_path)):
+        return backup_path
+    os.replace(handoff_path, backup_path)
+    return backup_path
+
+
+def _commit_handoff_invalidation(backup_path: Path) -> None:
+    try:
+        backup_path.unlink()
+    except FileNotFoundError:
+        pass
+
+
+def _restore_handoff(backup_path: Path, handoff_path: Path) -> None:
+    if os.path.lexists(str(backup_path)):
+        os.replace(backup_path, handoff_path)
+
+
+def _write_state_while_invalidating_handoff(
+    alignment_dir: Path, state: Dict[str, Any]
+) -> None:
+    backup_path = _move_handoff_to_backup(alignment_dir)
+    handoff_path = _handoff_path(alignment_dir)
+    try:
+        _write_state(alignment_dir, state)
+    except BaseException:
+        _restore_handoff(backup_path, handoff_path)
+        raise
+    _commit_handoff_invalidation(backup_path)
+
+
 def issue_review(alignment_dir: Path, adapter: str, status: str, location: str) -> Snapshot:
     if status not in _PRESENTATION_STATUSES:
         raise ValueError(f"unsupported presentation status: {status}")
@@ -176,8 +216,7 @@ def issue_review(alignment_dir: Path, adapter: str, status: str, location: str) 
         )
         state["decision"] = {}
         state["handoff"] = {}
-        _remove_handoff(alignment_dir)
-        _write_state(alignment_dir, state)
+        _write_state_while_invalidating_handoff(alignment_dir, state)
         return snapshot
 
 
@@ -224,8 +263,7 @@ def record_decision(
             "decided_at": _utc_now(),
         }
         state["handoff"] = {}
-        _remove_handoff(alignment_dir)
-        _write_state(alignment_dir, state)
+        _write_state_while_invalidating_handoff(alignment_dir, state)
 
 
 def check_gate(alignment_dir: Path) -> GateResult:

@@ -92,7 +92,11 @@ def write_handoff(alignment_dir: Path) -> Path:
             "digest": expected_digest,
             "verified_at": _utc_now(),
         }
-        _write_state(alignment_dir, state)
+        try:
+            _write_state(alignment_dir, state)
+        except BaseException:
+            _remove_handoff(alignment_dir)
+            raise
         after_state_write = check_gate(alignment_dir)
         if not after_state_write.ready or after_state_write.digest != expected_digest:
             _clear_failed_handoff(alignment_dir)
