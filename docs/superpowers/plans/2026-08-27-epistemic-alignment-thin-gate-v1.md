@@ -234,7 +234,7 @@ class Snapshot:
     paths: List[str]
 ```
 
-For each unique manifest path: require a relative POSIX path with no empty, `.` or `..` segment; resolve it under `alignment/`; reject escape, missing/non-file targets, and symlinks resolving outside the dossier. Hash a canonical header containing only schema version, project identity, and sorted snapshot paths, followed by each path, NUL, normalized UTF-8 content, NUL. Normalize CRLF/CR to LF. Sort paths. Label the result `sha256-v1`.
+For each unique manifest path: require a relative POSIX path with no empty, `.` or `..` segment; resolve it under `alignment/`; reject escape, missing/non-file targets, and symlinks resolving outside the dossier. Hash a canonical header containing only schema version, project identity, and sorted snapshot paths, followed by each sorted path and its normalized UTF-8 content. Frame the header, every path, and every normalized content value as an 8-byte big-endian byte length followed by its bytes, so arbitrary UTF-8 content cannot imitate field boundaries. Normalize CRLF/CR to LF before framing content. Label the result `sha256-v1`.
 
 - [ ] **Step 4: Add CLI and run tests**
 
