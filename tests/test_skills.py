@@ -40,6 +40,53 @@ class SkillTests(unittest.TestCase):
         for name in ["artifact-contract", "cockburn", "bdd", "c4", "semantic-review", "approval", "platform-detection"]:
             self.assertTrue((references / f"{name}.md").is_file(), name)
 
+    def test_reviewable_artifacts_sync_snapshot_membership_at_every_stage(self):
+        contract = (ROOT / "skills/shared/references/artifact-contract.md").read_text(encoding="utf-8")
+        for phrase in [
+            "mandatory snapshot membership invariant",
+            "snapshot_paths",
+            "created, renamed, or deleted",
+            "use-cases/UC-*.md",
+            "features/*.feature",
+            "decisions/ADR-*.md",
+            "review-state.json",
+            "handoff.md",
+        ]:
+            self.assertIn(phrase, contract)
+
+        producing = [
+            "align-project", "discover-domain", "write-use-cases",
+            "specify-behavior", "model-architecture", "review-alignment",
+        ]
+        issuing = ["review-alignment", "build-review", "approve-handoff"]
+        for name in producing:
+            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("sync manifest `snapshot_paths`", text.lower(), name)
+        for name in issuing:
+            text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("verify every current reviewable dossier file is listed", text.lower(), name)
+
+    def test_align_project_resume_mapping_has_one_dynamic_transition_marker(self):
+        text = (ROOT / "skills/align-project/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("`discover` → `alignment:discover-domain`", text)
+        self.assertIn("`use-cases` → `alignment:write-use-cases`", text)
+        self.assertIn("`behavior` → `alignment:specify-behavior`", text)
+        self.assertIn("`architecture` → `alignment:model-architecture`", text)
+        self.assertIn("`review` → `alignment:review-alignment`", text)
+        self.assertIn("`presentation` → `alignment:build-review`", text)
+        self.assertIn("`approval` → `alignment:approve-handoff`", text)
+        self.assertEqual(text.count("Next transition:"), 1)
+        self.assertNotIn("Next transition: `alignment:discover-domain`", text)
+
+    def test_approval_reference_uses_exact_cli_argument_order(self):
+        text = (ROOT / "skills/shared/references/approval.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "scripts/alignment decide <root> --decision approved --reviewer <label> --provenance human-message --review-hash <hash> --acknowledged-finding ID",
+            text,
+        )
+        self.assertIn("scripts/alignment check <root>", text)
+        self.assertIn("scripts/alignment handoff <root>", text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,5 +16,6 @@ Input: discovery dossier files and material stakeholder goals. Output: `alignmen
 3. Create or revise one Cockburn file using every template slot: scope, level, actor, interests, conditions, guarantees, trigger, numbered success scenario, extensions, rules, frequency, and issues.
 4. Link constraints, assumptions, contradictions, and open questions by readable source reference. Treat unresolved conditions as extensions or open issues.
 5. Keep each step at an actor-intent or system-responsibility level; make failure recovery observable.
+6. Sync manifest `snapshot_paths` for every reviewable file created, renamed, or deleted in this stage before transition.
 
 Do not substitute screen choreography for the goal model unless the interface is contractual. Next transition: `alignment:specify-behavior`.

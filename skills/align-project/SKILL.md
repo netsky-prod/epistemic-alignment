@@ -13,7 +13,9 @@ Input: project root and the human's request. Output: either a recorded skip rati
 
 1. Inspect `alignment/manifest.yaml` if it exists. Otherwise qualify the request: use alignment for substantial scope, ambiguity, architectural/public-interface change, multiple stakeholders, or material risk. For bounded work, record a short rationale in `charter.md` and produce neither approval nor handoff.
 2. Initialize an absent dossier with `scripts/alignment init <root> --project-id <id> --title <title>`.
-3. Read the existing phase files and `manifest.yaml`; continue at the first incomplete phase. Preserve labelled facts, statements, inferences, assumptions, contradictions, and questions.
+3. Read the existing phase files and `manifest.yaml`; continue at the first incomplete phase. Sync manifest `snapshot_paths` for every reviewable file created, renamed, or deleted in this stage before transition. Preserve labelled facts, statements, inferences, assumptions, contradictions, and questions.
 4. Ask one material question at a time when the files cannot answer it. Keep the current phase honest rather than inventing certainty.
 
-Do not turn the dossier into implementation planning or derive approval from readiness. Next transition: `alignment:discover-domain`.
+Resume mapping: `discover` → `alignment:discover-domain`; `use-cases` → `alignment:write-use-cases`; `behavior` → `alignment:specify-behavior`; `architecture` → `alignment:model-architecture`; `review` → `alignment:review-alignment`; `presentation` → `alignment:build-review`; `approval` → `alignment:approve-handoff`.
+
+Do not turn the dossier into implementation planning or derive approval from readiness. Next transition: invoke the mapped skill for the first incomplete phase.

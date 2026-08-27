@@ -16,5 +16,6 @@ Input: discovery, use cases, behavior examples, and relevant repository facts. O
 3. Pair each Mermaid view with a responsibility table linking elements to use cases/scenarios and open concerns.
 4. Create one ADR for each material choice, including context, decision, consequences, and alternatives. Ask one material question when a choice or its consequence is unknown.
 5. Preserve contradictions, assumptions, and unknowns as visible concerns.
+6. Sync manifest `snapshot_paths` for every reviewable file created, renamed, or deleted in this stage before transition.
 
 Do not imply that a diagram settles an undecided responsibility. Next transition: `alignment:review-alignment`.

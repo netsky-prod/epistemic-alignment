@@ -11,7 +11,7 @@ Record an explicit human decision for the snapshot the stakeholder actually revi
 
 Input: presented review reference, `alignment/review.md`, issued snapshot state, and a current human message. Output: either a recorded non-approval outcome or verified `alignment/handoff.md`. Read [thin approval](../shared/references/approval.md).
 
-1. Inspect `review-state.json`, `review.md`, presentation location, and `scripts/alignment snapshot <root> --json`. Restart at presentation if the current snapshot differs from the issued hash.
+1. Inspect `review-state.json`, `review.md`, presentation location, and `scripts/alignment snapshot <root> --json`. Verify every current reviewable dossier file is listed in manifest `snapshot_paths` before issue-review; restart at presentation if membership or the current snapshot differs from the issued hash.
 2. Show the human the Site or other review reference, `review.md` findings and dispositions, and the current snapshot hash. Ask one direct question for `approved`, `changes_requested`, or `rejected`.
 3. Accept approval only from an explicit human message in the current interaction. Transcribe it with `scripts/alignment decide <root> --decision <value> --reviewer <label> --provenance human-message --review-hash <hash>` and acknowledged finding IDs.
 4. For `changes_requested`, return to the relevant authoring skill; for `rejected`, report closure without handoff. For `approved`, run `scripts/alignment check <root> --json`, then `scripts/alignment handoff <root>` only when ready.

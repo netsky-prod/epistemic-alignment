@@ -16,5 +16,6 @@ Input: `alignment/use-cases/`, discovery context, and confirmed or proposed crit
 3. Write a Gherkin feature with `alignment-meta`, stable scenario/use-case tags, one rule where applicable, and Given/When/Then language describing externally visible behavior.
 4. Include the boundary, failure, or recovery case when it changes the stakeholder outcome. Link assumptions and open questions instead of guessing them away.
 5. Mark proposed criteria as proposed until a human confirms them.
+6. Sync manifest `snapshot_paths` for every reviewable file created, renamed, or deleted in this stage before transition.
 
 Do not write APIs, internal algorithms, or test-framework mechanics as acceptance behavior. Next transition: `alignment:model-architecture`.
