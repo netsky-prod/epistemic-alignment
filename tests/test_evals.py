@@ -41,7 +41,11 @@ class EvalTests(unittest.TestCase):
     def copied_run(self, name):
         temporary = tempfile.TemporaryDirectory(dir=ROOT)
         run = Path(temporary.name) / name
-        shutil.copytree(ROOT / "artifacts/evals/runs" / name, run)
+        shutil.copytree(
+            ROOT / "artifacts/evals/runs" / name,
+            run,
+            ignore=shutil.ignore_patterns(".next", ".vinext", ".wrangler", "coverage", "dist", "node_modules"),
+        )
         results = json.loads((ROOT / "artifacts/evals/results.json").read_text(encoding="utf-8"))
         entry = next(case for case in results["cases"] if case["name"] == name)
         entry["result"] = str(run.relative_to(ROOT) / "result.json")
@@ -206,6 +210,38 @@ class EvalTests(unittest.TestCase):
                 check=True,
                 stdout=subprocess.PIPE,
                 text=True,
+            )
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_forbidden_claim_in_unlisted_site_source(self):
+        temporary, run, results_path = self.copied_run("greenfield")
+        try:
+            source = run / "alignment-review/site/app/page.tsx"
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("export default function Page() { return <>site approval button</>; }\n", encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_omitted_snapshot_file_from_evidence(self):
+        temporary, run, results_path = self.copied_run("existing-repo")
+        try:
+            record_path = run / "result.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record["evidence_files"].remove("alignment/charter.md")
+            record_path.write_text(json.dumps(record), encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_keyword_gibberish_transcript(self):
+        temporary, run, results_path = self.copied_run("critical-unknown")
+        try:
+            (run / "transcript.md").write_text(
+                "review snapshot payload keys issue-review ready=false keyword gibberish\n",
+                encoding="utf-8",
             )
             self.assertNotEqual(self.run_checker(results_path).returncode, 0)
         finally:

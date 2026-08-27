@@ -2,6 +2,7 @@
 """Validate checked-in alignment eval evidence and replay thin-gate fixtures."""
 
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -44,6 +45,9 @@ RUN_KEYS = {
     "schema_version", "case", "captured_output", "evidence_files",
     "site_reference", "gate", "gate_reasons", "approval_recorded",
     "handoff_created", "published",
+}
+IGNORED_EVIDENCE_DIRS = {
+    ".next", ".vinext", ".wrangler", "coverage", "dist", "node_modules",
 }
 
 
@@ -102,6 +106,40 @@ def assert_phrases(name: str, required: List[str], forbidden: List[str], text: s
     for phrase in forbidden:
         if phrase.lower() in normalized:
             fail(f"{name} contains forbidden claim: {phrase}")
+
+
+def scoped_run_texts(name: str, run_dir: Path) -> List[str]:
+    """Read authored run evidence while excluding dependency/build output."""
+    texts = []
+    for path in sorted(run_dir.rglob("*")):
+        relative = path.relative_to(run_dir)
+        if not path.is_file() or any(part in IGNORED_EVIDENCE_DIRS for part in relative.parts):
+            continue
+        try:
+            texts.append(path.read_text(encoding="utf-8"))
+        except UnicodeDecodeError as error:
+            raise ValueError(f"{name} scoped evidence is not valid UTF-8: {relative}") from error
+    return texts
+
+
+def validate_transcript(name: str, text: str) -> None:
+    """Require an auditable Markdown event record, not a keyword placeholder."""
+    if len(text.strip()) < 200 or not re.search(r"^# .+transcript\s*$", text, re.MULTILINE | re.IGNORECASE):
+        fail(f"{name} transcript has no meaningful transcript header and body")
+    if name == "bounded-skip":
+        for label in ("Request:", "Qualification:", "Human answer:", "Outcome:"):
+            if not re.search(rf"^{re.escape(label)}", text, re.MULTILINE):
+                fail(f"{name} transcript is missing the {label[:-1]} event")
+        return
+    headings = re.findall(r"^## (.+)$", text, re.MULTILINE)
+    if len(headings) < 2:
+        fail(f"{name} transcript must contain multiple event sections")
+    if not any(re.search(r"request|initialization", heading, re.IGNORECASE) for heading in headings):
+        fail(f"{name} transcript has no request or initialization section")
+    if not any(re.search(r"action|output|gate|review|snapshot", heading, re.IGNORECASE) for heading in headings):
+        fail(f"{name} transcript has no action, output, review, snapshot, or gate section")
+    if "```" not in text and not re.search(r"^\d+\. ", text, re.MULTILINE):
+        fail(f"{name} transcript has no structured actions or raw output")
 
 
 def fixture_dossier(directory: str) -> Path:
@@ -173,8 +211,7 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
         if required_file not in record["evidence_files"]:
             fail(f"{name} does not list required evidence: {required_file}")
     transcript = local_file(run_dir, "transcript.md", f"{name} transcript")
-    if not transcript.read_text(encoding="utf-8").strip():
-        fail(f"{name} transcript is empty")
+    validate_transcript(name, transcript.read_text(encoding="utf-8"))
     site_reference = record.get("site_reference")
     site_path = local_file(run_dir, site_reference, f"{name} Site reference")
     site = load_json(site_path)
@@ -184,6 +221,16 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     if not alignment.is_dir():
         fail(f"{name} dossier is missing")
     snapshot = create_snapshot(alignment)
+    required_evidence = {
+        "transcript.md",
+        "alignment/manifest.yaml",
+        "alignment/review-state.json",
+        site_reference.split("#", 1)[0],
+        *(f"alignment/{path}" for path in snapshot.paths),
+    }
+    missing_evidence = sorted(required_evidence - set(record["evidence_files"]))
+    if missing_evidence:
+        fail(f"{name} omits current dossier or Site evidence: {', '.join(missing_evidence)}")
     state = load_json(alignment / "review-state.json")
     if not isinstance(state, dict):
         fail(f"{name} review state is invalid")
@@ -211,7 +258,7 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     if expected_gate != gate:
         fail(f"{name} expected gate does not match run gate")
     assert_phrases(name, required, forbidden, "\n".join(captured))
-    assert_phrases(name, [], forbidden, "\n".join(texts))
+    assert_phrases(name, [], forbidden, "\n".join(texts + scoped_run_texts(name, run_dir)))
 
 
 def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> None:
@@ -221,13 +268,15 @@ def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> N
         fail("bounded-skip must report skipped with no Site reference")
     if set(record["evidence_files"]) != {"transcript.md"}:
         fail("bounded-skip must use its explicit transcript as the only evidence")
+    transcript = local_file(run_dir, "transcript.md", "bounded-skip transcript")
+    validate_transcript(name, transcript.read_text(encoding="utf-8"))
     if (run_dir / "alignment").exists() or (run_dir / "alignment-review").exists() or list(run_dir.rglob("handoff.md")):
         fail("bounded-skip must not create a dossier, Site, or handoff")
     required, forbidden, expected_gate = expected_for(name)
     if expected_gate != gate:
         fail("bounded-skip expected gate does not match run gate")
     assert_phrases(name, required, forbidden, "\n".join(captured))
-    assert_phrases(name, [], forbidden, "\n".join(texts))
+    assert_phrases(name, [], forbidden, "\n".join(texts + scoped_run_texts(name, run_dir)))
 
 
 def validate_entry(entry: Dict[str, Any]) -> None:
