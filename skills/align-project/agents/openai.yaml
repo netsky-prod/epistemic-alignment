@@ -1,0 +1,4 @@
+interface:
+  display_name: "Align Project"
+  short_description: "Start or resume alignment work"
+  default_prompt: "Use $align-project to start or resume an alignment dossier."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Alignment"
+  short_description: "Surface cross-dossier review findings"
+  default_prompt: "Use $review-alignment to write human semantic review findings."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Use Cases"
+  short_description: "Model stakeholder goals as use cases"
+  default_prompt: "Use $write-use-cases to author Cockburn use cases from discovery."

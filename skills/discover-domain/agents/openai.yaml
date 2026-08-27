@@ -1,0 +1,4 @@
+interface:
+  display_name: "Discover Domain"
+  short_description: "Capture domain knowledge and uncertainty"
+  default_prompt: "Use $discover-domain to build or resume domain discovery."
