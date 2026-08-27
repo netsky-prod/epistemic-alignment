@@ -47,3 +47,13 @@ test("keeps findings before readiness and provides a C4 text fallback", async ()
   assert.match(html, /Snapshot hash/);
   assert.doesNotMatch(html, /Approve dossier|Record approval/);
 });
+
+test("renders dossier sources as evidence references instead of broken links", async () => {
+  const response = await render();
+  const html = await response.text();
+  const text = html.replace(/<!--.*?-->/g, "");
+
+  assert.match(text, /Evidence:.*overview\.md/);
+  assert.match(text, /Evidence:.*review\.md#F-01/);
+  assert.doesNotMatch(html, /href="[^"]*(?:alignment\/|\.md|\.feature)/);
+});

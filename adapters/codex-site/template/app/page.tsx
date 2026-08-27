@@ -1,5 +1,6 @@
 import review from "../public/review.json";
 import { C4Diagram } from "../components/C4Diagram";
+import { EvidenceReference } from "../components/EvidenceReference";
 import { FindingsPanel } from "../components/FindingsPanel";
 import { SectionNav } from "../components/SectionNav";
 import { Shell } from "../components/Shell";
@@ -24,7 +25,7 @@ type ReviewData = {
 const data = review as ReviewData;
 
 function LinkedItems({ items }: { items: ReviewItem[] }) {
-  return <ul className="item-list">{items.map((item) => <li key={item.id} className="item-card"><div className="item-heading"><strong>{item.id}: {item.title}</strong>{item.status && <StatusBadge status={item.status} />}</div><p>{item.detail}</p>{item.source && <a href={item.source}>Source: {item.source}</a>}</li>)}</ul>;
+  return <ul className="item-list">{items.map((item) => <li key={item.id} className="item-card"><div className="item-heading"><strong>{item.id}: {item.title}</strong>{item.status && <StatusBadge status={item.status} />}</div><p>{item.detail}</p>{item.source && <EvidenceReference source={item.source} />}</li>)}</ul>;
 }
 
 export default function Home() {
