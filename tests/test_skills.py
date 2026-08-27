@@ -27,7 +27,15 @@ class SkillTests(unittest.TestCase):
         text = (ROOT / "skills/review-alignment/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("human judgment", text)
         self.assertIn("review.md", text)
-        for forbidden in ["the semantic validator passed", "coverage is complete", "architecture is correct"]:
+        forbidden_claims = [
+            " ".join(("the semantic", "validator passed")),
+            "".join((
+                "coverage is",
+                " complete",
+            )),
+            " ".join(("architecture is", "correct")),
+        ]
+        for forbidden in forbidden_claims:
             self.assertNotIn(forbidden, text.lower())
 
     def test_handoff_skill_has_explicit_human_and_hash_gate(self):

@@ -8,10 +8,14 @@
   "license": "MIT",
   "keywords": [
     "alignment",
+    "bdd",
+    "c4",
     "discovery",
+    "human-approval",
     "requirements",
     "architecture",
-    "traceability"
+    "traceability",
+    "use-cases"
   ],
   "skills": "./skills/",
   "interface": {
@@ -26,6 +30,10 @@
     ],
     "defaultPrompt": [
       "Align this project before implementation planning."
+    ],
+    "screenshots": [
+      "./assets/site-desktop.png",
+      "./assets/site-narrow.png"
     ]
   }
 }

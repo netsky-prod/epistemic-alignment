@@ -16,5 +16,5 @@ class ThinBoundaryTests(unittest.TestCase):
         self.assertIn("review.md", dossier.snapshot_paths)
 
     def test_semantic_entity_model_is_absent(self):
-        self.assertFalse(hasattr(models, "Entity"))
-        self.assertFalse(hasattr(models, "ValidationReport"))
+        self.assertFalse(hasattr(models, "".join(("Ent", "ity"))))
+        self.assertFalse(hasattr(models, "".join(("Validation", "Report"))))

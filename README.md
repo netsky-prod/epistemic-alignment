@@ -67,22 +67,38 @@ See [usage](docs/usage.md) for the phase outputs and gate protocol,
 
 The plugin helper itself has no third-party runtime dependencies. The
 plugin-creator validator separately imports PyYAML, so run it from a dedicated,
-pinned validator environment:
+pinned validator environment. The full local release check is:
 
 ```sh
+git diff --check
 PYTHONPATH=src python3 -m unittest discover -s tests -v
-validator_venv="$HOME/.cache/epistemic-alignment/plugin-validator-pyyaml-6.0.2"
-python3 -m venv "$validator_venv"
-"$validator_venv/bin/python" -m pip install --disable-pip-version-check "PyYAML==6.0.2"
-"$validator_venv/bin/python" \
-  /Users/darasokolovskaa/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py .
+PYTHONPATH=src python3 -m unittest tests.test_release -v
+pnpm --dir adapters/codex-site/template test
+pnpm --dir examples/approved-project/alignment-review/site test
 scripts/alignment snapshot examples/approved-project --json
 scripts/alignment check examples/approved-project --json
-pnpm --dir examples/approved-project/alignment-review/site test
+! rg -n "class Entity|ValidationReport|the semantic validator passed|coverage.*complete" src tests
+git status --short
+
+alignment_validator_venv="$(mktemp -d)"
+python3 -m venv "$alignment_validator_venv"
+"$alignment_validator_venv/bin/python" -m pip install \
+  --disable-pip-version-check "PyYAML==6.0.2"
+alignment_plugin_creator="${CODEX_HOME:-$HOME/.codex}/skills/.system/plugin-creator"
+"$alignment_validator_venv/bin/python" \
+  "$alignment_plugin_creator/scripts/validate_plugin.py" .
 ```
 
 Publishing the review Site is optional and requires separate explicit human
 consent. This repository does not publish a Site or plugin automatically.
+
+## Release metadata
+
+The recommended GitHub repository name is `epistemic-alignment`, and the first
+release tag is `v0.1.0`. The manifest intentionally omits repository and
+homepage fields until an actual remote exists. Release screenshots are included
+as plugin assets and retained with their pixel metadata in
+`artifacts/release/e2e.json`.
 
 ## Documentation
 
@@ -91,5 +107,6 @@ consent. This repository does not publish a Site or plugin automatically.
 - [Recovery and restartability](docs/recovery.md)
 - [Trust boundary and limitations](docs/trust-model.md)
 - [Renderer contract and future adapters](docs/adapters.md)
+- [Release history](CHANGELOG.md)
 
 The package is licensed under the MIT License.

@@ -94,6 +94,23 @@ class ReleaseTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue((ROOT / f"docs/{name}.md").is_file(), name)
 
+    def test_github_ready_release_metadata_is_complete(self):
+        readme = (ROOT / "README.md").read_text()
+        changelog_path = ROOT / "CHANGELOG.md"
+        self.assertTrue(changelog_path.is_file())
+        changelog = changelog_path.read_text()
+        self.assertIn("`epistemic-alignment`", readme)
+        self.assertIn("`v0.1.0`", readme)
+        self.assertIn("## 0.1.0 - 2026-08-27", changelog)
+        for command in [
+            "PYTHONPATH=src python3 -m unittest discover -s tests -v",
+            "PYTHONPATH=src python3 -m unittest tests.test_release -v",
+            "pnpm --dir adapters/codex-site/template test",
+            "pnpm --dir examples/approved-project/alignment-review/site test",
+        ]:
+            with self.subTest(command=command):
+                self.assertIn(command, readme)
+
     def test_agent_binds_a_simple_human_decision_to_the_issued_digest(self):
         usage = (ROOT / "docs/usage.md").read_text()
         approval_skill = (ROOT / "skills/approve-handoff/SKILL.md").read_text()
