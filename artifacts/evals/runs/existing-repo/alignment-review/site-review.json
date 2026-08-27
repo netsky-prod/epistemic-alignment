@@ -2,7 +2,7 @@
   "project": {
     "id": "existing-repo-export",
     "title": "Health-data import alignment",
-    "source": "derived from canonical alignment dossier"
+    "source": "alignment/manifest.yaml"
   },
   "summary": {
     "goal": "Align the proposed health-data import with stakeholders before implementation planning.",

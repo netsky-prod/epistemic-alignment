@@ -2,7 +2,7 @@
   "project": {
     "id": "critical-unknown-import",
     "title": "Health-data import alignment (critical unknown)",
-    "source": "derived from canonical alignment dossier"
+    "source": "alignment/manifest.yaml"
   },
   "summary": {
     "goal": "Plan a health-data import for stakeholder review before implementation planning.",

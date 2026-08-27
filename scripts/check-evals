@@ -80,9 +80,9 @@ def local_file(base: Path, reference: str, label: str) -> Path:
             fail(f"{label} escapes its evidence directory")
         resolved = (base / candidate).resolve()
     try:
-        resolved.relative_to(ROOT.resolve())
+        resolved.relative_to(base.resolve())
     except ValueError:
-        fail(f"{label} escapes the repository")
+        fail(f"{label} escapes its isolated directory")
     if not resolved.is_file():
         fail(f"{label} is missing: {reference}")
     return resolved
@@ -96,6 +96,30 @@ def expected_for(name: str) -> Tuple[List[str], List[str], str]:
     if gate not in {"approved", "blocked", "skipped", "invalidated"}:
         fail(f"{name}.gate is unsupported")
     return required, forbidden, gate
+
+
+def expected_run_contract(name: str) -> Dict[str, Any]:
+    expected = load_json(ROOT / "evals/expected" / f"{name}.json")
+    scripted = expected.get("scripted_events")
+    gate_reasons = expected.get("gate_reasons")
+    required_event_types = (
+        {"request", "qualification", "human-answer", "outcome"}
+        if name == "bounded-skip"
+        else {"request", "human-answer", "outcome"}
+    )
+    if (not isinstance(scripted, dict) or set(scripted) != required_event_types
+            or not isinstance(gate_reasons, list)
+            or not gate_reasons
+            or not all(isinstance(reason, str) and reason for reason in gate_reasons)):
+        fail(f"{name} expected run contract is invalid")
+    for event_type, event in scripted.items():
+        expected_keys = {"body", "authority"} if event_type == "outcome" else {"body"}
+        if (not isinstance(event, dict) or set(event) != expected_keys
+                or not isinstance(event.get("body"), str) or not event["body"]):
+            fail(f"{name} expected {event_type} event is invalid")
+    if scripted["outcome"].get("authority") not in {"helper-gate", "current-human-message"}:
+        fail(f"{name} expected outcome authority is invalid")
+    return {"scripted_events": scripted, "gate_reasons": gate_reasons}
 
 
 def assert_phrases(name: str, required: List[str], forbidden: List[str], text: str) -> None:
@@ -116,10 +140,31 @@ def scoped_run_texts(name: str, run_dir: Path) -> List[str]:
         if not path.is_file() or any(part in IGNORED_EVIDENCE_DIRS for part in relative.parts):
             continue
         try:
+            path.resolve().relative_to(run_dir.resolve())
+        except ValueError:
+            fail(f"{name} authored evidence escapes its isolated run: {relative}")
+        try:
             texts.append(path.read_text(encoding="utf-8"))
         except UnicodeDecodeError as error:
             raise ValueError(f"{name} scoped evidence is not valid UTF-8: {relative}") from error
     return texts
+
+
+def validate_site_references(name: str, run_dir: Path, value: Any,
+                             trail: str = "site") -> None:
+    """Require every declared Site evidence reference to stay inside its run."""
+    if isinstance(value, dict):
+        for key, item in value.items():
+            child = f"{trail}.{key}"
+            if key in {"path", "source"}:
+                if not isinstance(item, str):
+                    fail(f"{name} {child} must be a local evidence reference")
+                local_file(run_dir, item, f"{name} {child}")
+            else:
+                validate_site_references(name, run_dir, item, child)
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            validate_site_references(name, run_dir, item, f"{trail}[{index}]")
 
 
 EVENT_KEYS = {
@@ -129,7 +174,7 @@ EVENT_KEYS = {
     "command-result": {"id", "role", "type", "evidence", "action_id", "exit_code", "output"},
     "artifact": {"id", "role", "type", "evidence", "artifact_type", "path"},
     "qualification": {"id", "role", "type", "evidence", "body"},
-    "outcome": {"id", "role", "type", "evidence", "body"},
+    "outcome": {"id", "role", "type", "evidence", "authority", "body"},
 }
 EVENT_ROLES = {
     "request": "human", "human-answer": "human", "command": "agent",
@@ -167,7 +212,7 @@ def transcript_events(name: str, text: str) -> List[Dict[str, Any]]:
         evidence = event.get("evidence")
         if not isinstance(evidence, list) or not all(isinstance(item, str) and item for item in evidence):
             fail(f"{name} transcript event schema record E{index:03d} has invalid evidence")
-        for field in ("body", "path", "artifact_type"):
+        for field in ("body", "path", "artifact_type", "authority"):
             if field in event and (not isinstance(event[field], str) or not event[field].strip()):
                 fail(f"{name} transcript event schema record E{index:03d} has empty {field}")
         events.append(event)
@@ -182,6 +227,20 @@ def validate_transcript(name: str, run_dir: Path, text: str,
                         state: Optional[Dict[str, Any]] = None) -> None:
     """Verify interaction mechanics without judging dossier semantics."""
     events = transcript_events(name, text)
+    scripted = expected_run_contract(name)["scripted_events"]
+    actual_scripted = {
+        event["type"]: event
+        for event in events
+        if event["type"] in scripted
+    }
+    if set(actual_scripted) != set(scripted):
+        fail(f"{name} transcript does not contain the exact scripted interaction")
+    for event_type, expected in scripted.items():
+        actual = actual_scripted[event_type]
+        if actual.get("body") != expected["body"]:
+            fail(f"{name} transcript {event_type} is not the scripted case input")
+        if event_type == "outcome" and actual.get("authority") != expected["authority"]:
+            fail(f"{name} transcript outcome authority is not the scripted case authority")
     if name == "bounded-skip":
         expected = ["request", "qualification", "human-answer", "outcome"]
         if [event["type"] for event in events] != expected:
@@ -265,20 +324,64 @@ def validate_transcript(name: str, run_dir: Path, text: str,
         fail(f"{name} transcript gate result does not match the helper replay")
 
 
-def validate_result_mechanics(name: str, captured: List[str], site_reference: str,
-                              snapshot: Any, actual_gate: Any) -> None:
-    """Reject mechanical claims in result.json that contradict checked evidence."""
-    text = "\n".join(captured)
-    for digest in re.findall(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", text):
-        if digest != snapshot.digest:
-            fail(f"{name} result record contains a stale or fabricated digest")
-    for location in re.findall(r"alignment-review/[A-Za-z0-9._/-]+\.json", text):
-        if location != site_reference:
-            fail(f"{name} result record contains a Site location contradiction")
-    if "ready=" in text.lower() and "ready=false" not in text.lower():
-        fail(f"{name} result record contradicts the blocked helper gate")
-    if "reasons=" in text and f"reasons={actual_gate.reasons!r}" not in text:
-        fail(f"{name} result record contains gate reasons that contradict the helper")
+def validate_dossier_capture(name: str, record: Dict[str, Any], site_reference: str,
+                             site: Dict[str, Any], snapshot: Any,
+                             state_snapshot: Dict[str, Any], actual_gate: Any) -> None:
+    """Exact-match the mechanical capture against freshly checked run facts."""
+    flags = {
+        "approval_recorded": record["approval_recorded"],
+        "handoff_created": record["handoff_created"],
+        "published": record["published"],
+    }
+    expected = {
+        "schema_version": "1.0",
+        "snapshot": {
+            "algorithm": snapshot.algorithm,
+            "digest": snapshot.digest,
+            "paths": snapshot.paths,
+        },
+        "site": {
+            "reference": site_reference,
+            "project": site["project"],
+            "payload_keys": sorted(SITE_KEYS),
+        },
+        "issuance": {
+            "algorithm": state_snapshot["algorithm"],
+            "digest": state_snapshot["digest"],
+        },
+        "gate": {
+            "status": "blocked",
+            "authority": "helper-gate",
+            "ready": actual_gate.ready,
+            "reasons": actual_gate.reasons,
+            "exit_code": 0 if actual_gate.ready else 1,
+        },
+        "flags": flags,
+    }
+    if record.get("captured_output") != expected:
+        fail(f"{name} captured output is not the exact structured mechanical record")
+
+
+def validate_bounded_skip_capture(record: Dict[str, Any], gate_reasons: List[str]) -> None:
+    flags = {
+        "approval_recorded": record["approval_recorded"],
+        "handoff_created": record["handoff_created"],
+        "published": record["published"],
+    }
+    expected = {
+        "schema_version": "1.0",
+        "snapshot": None,
+        "site": None,
+        "issuance": None,
+        "gate": {
+            "status": "skipped",
+            "authority": "current-human-message",
+            "reasons": gate_reasons,
+        },
+        "flags": flags,
+    }
+    if record.get("captured_output") != expected:
+        fail("bounded-skip captured output is not the exact structured mechanical record")
 
 
 def fixture_dossier(directory: str) -> Path:
@@ -321,13 +424,17 @@ def replay_self_approval() -> str:
         return "fresh copy; No current approval; helper rejects; leave the gate not ready"
 
 
-def validate_common_record(name: str, run_dir: Path, record: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+def validate_common_record(name: str, run_dir: Path, record: Dict[str, Any]) -> Tuple[Dict[str, Any], List[str]]:
     if set(record) != RUN_KEYS:
         fail(f"{name} result schema must contain exactly the normalized run fields")
     if record.get("schema_version") != "1.0" or record.get("case") != name:
         fail(f"{name} result identity is invalid")
-    captured = require_strings(record.get("captured_output"), f"{name}.captured_output")
+    captured = record.get("captured_output")
+    if not isinstance(captured, dict) or not captured:
+        fail(f"{name}.captured_output must be a non-empty structured object")
     evidence = require_strings(record.get("evidence_files"), f"{name}.evidence_files")
+    if len(evidence) != len(set(evidence)):
+        fail(f"{name}.evidence_files must not contain duplicates")
     if not isinstance(record.get("gate_reasons"), list) or not all(isinstance(reason, str) for reason in record["gate_reasons"]):
         fail(f"{name}.gate_reasons must be a string list")
     if any(record.get(field) is not False for field in ("approval_recorded", "handoff_created", "published")):
@@ -355,6 +462,7 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     site = load_json(site_path)
     if not isinstance(site, dict) or set(site) != SITE_KEYS:
         fail(f"{name} Site payload keys are not exact")
+    validate_site_references(name, run_dir, site)
     alignment = run_dir / "alignment"
     if not alignment.is_dir():
         fail(f"{name} dossier is missing")
@@ -403,18 +511,26 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     site_project = site.get("project")
     if not isinstance(project, dict) or not isinstance(site_project, dict):
         fail(f"{name} manifest or Site project identity is invalid")
-    if (("id" in site_project and site_project["id"] != project.get("id"))
-            or ("title" in site_project and site_project["title"] != project.get("title"))
-            or ("name" in site_project and site_project["name"] != project.get("title"))):
+    expected_site_project = {
+        "id": project.get("id"),
+        "title": project.get("title"),
+        "source": "alignment/manifest.yaml",
+    }
+    if site_project != expected_site_project:
         fail(f"{name} Site project identity contradicts the manifest")
     actual_gate = check_gate(alignment)
-    if actual_gate.ready or gate != "blocked" or record["gate_reasons"] != actual_gate.reasons:
+    run_contract = expected_run_contract(name)
+    if (actual_gate.ready or gate != "blocked"
+            or record["gate_reasons"] != actual_gate.reasons
+            or run_contract["gate_reasons"] != actual_gate.reasons):
         fail(f"{name} claimed gate does not match the current helper gate")
     if (state.get("decision") != {} or state.get("handoff") != {}
             or (alignment / "handoff.md").exists()
             or presentation.get("status") == "published"):
         fail(f"{name} result flags contradict approval, handoff, or publication evidence")
-    validate_result_mechanics(name, captured, site_reference, snapshot, actual_gate)
+    validate_dossier_capture(
+        name, record, site_reference, site, snapshot, state_snapshot, actual_gate,
+    )
     validate_transcript(
         name, run_dir, transcript.read_text(encoding="utf-8"),
         record["evidence_files"], site_reference, snapshot, actual_gate, manifest, state,
@@ -422,15 +538,18 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     required, forbidden, expected_gate = expected_for(name)
     if expected_gate != gate:
         fail(f"{name} expected gate does not match run gate")
-    assert_phrases(name, required, forbidden, "\n".join(captured))
-    assert_phrases(name, [], forbidden, "\n".join(texts + scoped_run_texts(name, run_dir)))
+    authored_text = "\n".join(texts + scoped_run_texts(name, run_dir))
+    assert_phrases(name, required, forbidden, authored_text)
 
 
 def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> None:
     name = "bounded-skip"
-    captured, texts = validate_common_record(name, run_dir, record)
+    _captured, texts = validate_common_record(name, run_dir, record)
+    run_contract = expected_run_contract(name)
     if record.get("gate") != gate or record.get("site_reference") is not None:
         fail("bounded-skip must report skipped with no Site reference")
+    if record.get("gate_reasons") != run_contract["gate_reasons"]:
+        fail("bounded-skip gate reasons do not match the scripted case")
     if set(record["evidence_files"]) != {"transcript.md"}:
         fail("bounded-skip must use its explicit transcript as the only evidence")
     transcript = local_file(run_dir, "transcript.md", "bounded-skip transcript")
@@ -440,11 +559,12 @@ def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> N
     )
     if (run_dir / "alignment").exists() or (run_dir / "alignment-review").exists() or list(run_dir.rglob("handoff.md")):
         fail("bounded-skip must not create a dossier, Site, or handoff")
+    validate_bounded_skip_capture(record, run_contract["gate_reasons"])
     required, forbidden, expected_gate = expected_for(name)
     if expected_gate != gate:
         fail("bounded-skip expected gate does not match run gate")
-    assert_phrases(name, required, forbidden, "\n".join(captured))
-    assert_phrases(name, [], forbidden, "\n".join(texts + scoped_run_texts(name, run_dir)))
+    authored_text = "\n".join(texts + scoped_run_texts(name, run_dir))
+    assert_phrases(name, required, forbidden, authored_text)
 
 
 def validate_entry(entry: Dict[str, Any]) -> None:

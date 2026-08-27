@@ -1,7 +1,14 @@
 {
   "schema_version": "1.0",
   "case": "existing-repo",
-  "captured_output": ["Repository facts: current importer accepts CSV and stores records for 30 days.", "The proposed health-data import is labelled proposed and is not a repository fact.", "Reviewable artifact paths are synchronized in alignment/manifest.yaml.", "Retention uncertainty UQ-001 remains an open blocker in review.md and the draft Site payload.", "Draft Site reference: alignment-review/site-review.json; no publish, approval, or handoff occurred.", "Final gate: blocked because retention is unresolved and no current explicit human approval exists; helper state is review-state-invalid because no decision was recorded."],
+  "captured_output": {
+    "schema_version": "1.0",
+    "snapshot": {"algorithm": "sha256-v1", "digest": "e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd", "paths": ["architecture/components.md", "architecture/containers.md", "architecture/context.md", "assumptions.md", "charter.md", "decisions/ADR-001.md", "features/health-data-import.feature", "glossary.md", "open-questions.md", "review.md", "stakeholders.md", "use-cases/UC-001.md"]},
+    "site": {"reference": "alignment-review/site-review.json", "project": {"id": "existing-repo-export", "title": "Health-data import alignment", "source": "alignment/manifest.yaml"}, "payload_keys": ["architecture", "behavior", "decisions", "findings", "project", "risks", "snapshot", "stakeholders", "summary", "useCases"]},
+    "issuance": {"algorithm": "sha256-v1", "digest": "e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd"},
+    "gate": {"status": "blocked", "authority": "helper-gate", "ready": false, "reasons": ["review-state-invalid"], "exit_code": 1},
+    "flags": {"approval_recorded": false, "handoff_created": false, "published": false}
+  },
   "evidence_files": ["alignment/manifest.yaml", "alignment/charter.md", "alignment/stakeholders.md", "alignment/glossary.md", "alignment/assumptions.md", "alignment/open-questions.md", "alignment/use-cases/UC-001.md", "alignment/features/health-data-import.feature", "alignment/architecture/context.md", "alignment/architecture/containers.md", "alignment/architecture/components.md", "alignment/decisions/ADR-001.md", "alignment/review.md", "alignment/review-state.json", "alignment-review/site-review.json", "transcript.md"],
   "site_reference": "alignment-review/site-review.json",
   "gate": "blocked",

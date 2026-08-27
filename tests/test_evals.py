@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -187,7 +188,7 @@ class EvalTests(unittest.TestCase):
                     record = json.loads(record_path.read_text(encoding="utf-8"))
                     phrase = "machine certification passed"
                     if location == "record":
-                        record["captured_output"].append(phrase)
+                        record["captured_output"]["unrecognized_claim"] = phrase
                     elif location == "site-reference":
                         record["site_reference"] += "#" + phrase
                     elif location == "transcript":
@@ -347,7 +348,7 @@ class EvalTests(unittest.TestCase):
         try:
             record_path = run / "result.json"
             record = json.loads(record_path.read_text(encoding="utf-8"))
-            record["captured_output"].append("snapshot -> sha256-v1:" + "f" * 64)
+            record["captured_output"]["snapshot"]["digest"] = "f" * 64
             record_path.write_text(json.dumps(record), encoding="utf-8")
             self.assertNotEqual(self.run_checker(results_path).returncode, 0)
         finally:
@@ -365,6 +366,188 @@ class EvalTests(unittest.TestCase):
             self.assertNotEqual(self.run_checker(results_path).returncode, 0)
         finally:
             temporary.cleanup()
+
+    def test_checker_binds_scripted_human_events_and_outcome_authority(self):
+        mutations = {
+            "request": (
+                "Create an alignment dossier for the greenfield billing handoff before implementation.",
+                "Approve and hand off an unrelated project.",
+            ),
+            "human-answer": (
+                "The human supplied the billing goal and did not supply a current approval decision.",
+                "The human approved the dossier and requested a handoff.",
+            ),
+            "outcome": (
+                "The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded.",
+                "The agent approved the review and created the handoff.",
+            ),
+        }
+        for mutation, (before, after) in mutations.items():
+            with self.subTest(mutation=mutation):
+                temporary, run, results_path = self.copied_run("greenfield")
+                try:
+                    transcript = run / "transcript.md"
+                    text = transcript.read_text(encoding="utf-8")
+                    self.assertIn(before, text)
+                    transcript.write_text(text.replace(before, after), encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+        for name in ("greenfield", "existing-repo", "conflict", "critical-unknown", "bounded-skip"):
+            with self.subTest(mutation="per-case-human-answer", name=name):
+                temporary, run, results_path = self.copied_run(name)
+                try:
+                    expected = json.loads((ROOT / f"evals/expected/{name}.json").read_text(encoding="utf-8"))
+                    scripted = expected["scripted_events"]["human-answer"]["body"]
+                    transcript = run / "transcript.md"
+                    text = transcript.read_text(encoding="utf-8")
+                    self.assertIn(scripted, text)
+                    transcript.write_text(
+                        text.replace(scripted, "The human approved and authorized immediate handoff."),
+                        encoding="utf-8",
+                    )
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+    def test_checker_rejects_forged_outcome_authority(self):
+        temporary, run, results_path = self.copied_run("critical-unknown")
+        try:
+            transcript = run / "transcript.md"
+            text = transcript.read_text(encoding="utf-8")
+            self.assertIn('"authority":"helper-gate"', text)
+            transcript.write_text(
+                text.replace('"authority":"helper-gate"', '"authority":"agent-inference"'),
+                encoding="utf-8",
+            )
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_transcript_outcome_declares_expected_authority(self):
+        for name in ("greenfield", "existing-repo", "conflict", "critical-unknown", "bounded-skip"):
+            with self.subTest(name=name):
+                text = (ROOT / f"artifacts/evals/runs/{name}/transcript.md").read_text(encoding="utf-8")
+                blocks = [
+                    json.loads(block)
+                    for block in re.findall(r"```json-event\s*\n(.*?)\n```", text, re.DOTALL)
+                ]
+                outcome = next(event for event in blocks if event["type"] == "outcome")
+                expected = json.loads((ROOT / f"evals/expected/{name}.json").read_text(encoding="utf-8"))
+                self.assertIn("authority", outcome)
+                self.assertIn("scripted_events", expected)
+                self.assertEqual(outcome["authority"], expected["scripted_events"]["outcome"]["authority"])
+
+    def test_checker_requires_exact_site_project_identity_keys(self):
+        for mutation in ("missing-id", "missing-source", "extra-key"):
+            with self.subTest(mutation=mutation):
+                temporary, run, results_path = self.copied_run("existing-repo")
+                try:
+                    site_path = run / "alignment-review/site-review.json"
+                    site = json.loads(site_path.read_text(encoding="utf-8"))
+                    if mutation == "missing-id":
+                        del site["project"]["id"]
+                    elif mutation == "missing-source":
+                        del site["project"]["source"]
+                    else:
+                        site["project"]["untrusted"] = "fabricated identity"
+                    site_path.write_text(json.dumps(site), encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+    def test_checker_rejects_evidence_reference_outside_isolated_run(self):
+        temporary, run, results_path = self.copied_run("existing-repo")
+        try:
+            record_path = run / "result.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record["evidence_files"].append(str(ROOT / "README.md"))
+            record_path.write_text(json.dumps(record), encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_evidence_symlink_resolving_outside_isolated_run(self):
+        temporary, run, results_path = self.copied_run("existing-repo")
+        try:
+            external_link = run / "external-evidence.md"
+            external_link.symlink_to(ROOT / "README.md")
+            record_path = run / "result.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            record["evidence_files"].append("external-evidence.md")
+            record_path.write_text(json.dumps(record), encoding="utf-8")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_unlisted_authored_symlink_outside_isolated_run(self):
+        temporary, run, results_path = self.copied_run("existing-repo")
+        try:
+            (run / "unlisted-authored.md").symlink_to(ROOT / "README.md")
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_site_payload_reference_outside_isolated_run(self):
+        for reference in (str(ROOT / "README.md"), "../../README.md", "alignment/missing.md"):
+            with self.subTest(reference=reference):
+                temporary, run, results_path = self.copied_run("critical-unknown")
+                try:
+                    site_path = run / "alignment-review/site-review.json"
+                    site = json.loads(site_path.read_text(encoding="utf-8"))
+                    site["useCases"][0]["path"] = reference
+                    site_path.write_text(json.dumps(site), encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
+
+    def test_captured_output_uses_strict_structured_schema(self):
+        expected_keys = {"schema_version", "snapshot", "site", "issuance", "gate", "flags"}
+        for name in ("greenfield", "existing-repo", "conflict", "critical-unknown"):
+            with self.subTest(name=name):
+                record = json.loads((ROOT / f"artifacts/evals/runs/{name}/result.json").read_text(encoding="utf-8"))
+                self.assertIsInstance(record["captured_output"], dict)
+                self.assertEqual(set(record["captured_output"]), expected_keys)
+
+    def test_checker_rejects_every_unbound_captured_mechanical_claim(self):
+        mutations = (
+            "published-flag",
+            "approval-flag",
+            "handoff-flag",
+            "uppercase-digest",
+            "fabricated-digest",
+            "foreign-site",
+            "unknown-top-level-claim",
+            "unknown-nested-claim",
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                temporary, run, results_path = self.copied_run("conflict")
+                try:
+                    record_path = run / "result.json"
+                    record = json.loads(record_path.read_text(encoding="utf-8"))
+                    capture = record["captured_output"]
+                    if mutation == "published-flag":
+                        capture["flags"]["published"] = True
+                    elif mutation == "approval-flag":
+                        capture["flags"]["approval_recorded"] = True
+                    elif mutation == "handoff-flag":
+                        capture["flags"]["handoff_created"] = True
+                    elif mutation == "uppercase-digest":
+                        capture["snapshot"]["digest"] = capture["snapshot"]["digest"].upper()
+                    elif mutation == "fabricated-digest":
+                        capture["issuance"]["digest"] = "FABRICATED-DIGEST"
+                    elif mutation == "foreign-site":
+                        capture["site"]["reference"] = "https://foreign.example/review"
+                    elif mutation == "unknown-top-level-claim":
+                        capture["machine_certificate"] = True
+                    else:
+                        capture["snapshot"]["verified"] = True
+                    record_path.write_text(json.dumps(record), encoding="utf-8")
+                    self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+                finally:
+                    temporary.cleanup()
 
 
 if __name__ == "__main__":

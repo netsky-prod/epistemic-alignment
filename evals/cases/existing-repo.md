@@ -2,8 +2,8 @@
 
 ## Starting prompt
 
-"Add an externally visible export flow to this repository; first establish the
-current behavior, stakeholders, and architectural impact."
+Exact request event: "Establish current behavior, stakeholders, and
+architectural impact for health-data import in the existing product."
 
 ## Available evidence
 
@@ -13,8 +13,8 @@ to the first incomplete behavior stage and requiring snapshot membership sync.
 
 ## Scripted human answers
 
-The human confirms the product outcome but leaves a retention detail open for
-review; no approval decision is supplied.
+Exact human-answer event: "The goal was confirmed, retention remained open,
+and no current explicit approval was supplied."
 
 ## Expected dossier and Site behavior
 

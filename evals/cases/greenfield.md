@@ -2,8 +2,8 @@
 
 ## Starting prompt
 
-"We are starting a multi-stakeholder service with uncertain billing rules. Help
-us align before implementation planning."
+Exact request event: "Create an alignment dossier for the greenfield billing
+handoff before implementation."
 
 ## Available evidence
 
@@ -13,8 +13,8 @@ not create the canonical dossier or thin-gate sequence.
 
 ## Scripted human answers
 
-The human answers one material discovery question at a time and does not issue
-an approval message during this case.
+Exact human-answer event: "The human supplied the billing goal and did not
+supply a current approval decision."
 
 ## Expected dossier and Site behavior
 

@@ -2,8 +2,8 @@
 
 ## Starting prompt
 
-"Finance requires irreversible exports; support requires a cancellation window.
-Capture the conflict before implementation."
+Exact request event: "Capture Finance's irreversible-export requirement and
+Support's cancellation-window requirement without choosing a policy."
 
 ## Available evidence
 
@@ -12,8 +12,8 @@ deadline pressure did not silently resolve a material billing contradiction.
 
 ## Scripted human answers
 
-The human confirms both statements are current and defers the resolution to a
-named decision owner.
+Exact human-answer event: "Both positions are current, resolution belongs to
+the COO, and no current explicit approval was supplied."
 
 ## Expected dossier and Site behavior
 

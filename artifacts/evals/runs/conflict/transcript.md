@@ -36,5 +36,5 @@ Each record follows the mechanical eval event schema; it does not certify dossie
 {"id":"E011","role":"tool","type":"command-result","evidence":["alignment/review-state.json"],"action_id":"A004","exit_code":1,"output":{"digest":"a4f6ae31caa93949e9909a70978279333e49a8bb5145da86b1d82920fc34d494","ready":false,"reasons":["review-state-invalid"]}}
 ```
 ```json-event
-{"id":"E012","role":"agent","type":"outcome","evidence":["alignment/review-state.json"],"body":"The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
+{"id":"E012","role":"agent","type":"outcome","evidence":["alignment/review-state.json"],"authority":"helper-gate","body":"The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
 ```

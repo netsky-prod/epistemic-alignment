@@ -1,7 +1,14 @@
 {
   "schema_version": "1.0",
   "case": "bounded-skip",
-  "captured_output": ["Bounded spelling correction qualified for alignment skip.", "Human explicitly agreed to skip alignment and recorded the rationale: no behavior, interface, architecture, or stakeholder-agreement change.", "Recorded skip rationale only; no approval, handoff, or Site was created."],
+  "captured_output": {
+    "schema_version": "1.0",
+    "snapshot": null,
+    "site": null,
+    "issuance": null,
+    "gate": {"status": "skipped", "authority": "current-human-message", "reasons": ["bounded spelling-only label correction", "no behavior, interface, architecture, or stakeholder-agreement change", "human explicitly agreed to skip alignment with recorded rationale", "skipped is not an approved snapshot and cannot be handed off through the alignment gate"]},
+    "flags": {"approval_recorded": false, "handoff_created": false, "published": false}
+  },
   "evidence_files": ["transcript.md"],
   "site_reference": null,
   "gate": "skipped",

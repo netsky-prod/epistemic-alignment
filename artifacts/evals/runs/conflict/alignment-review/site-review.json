@@ -2,7 +2,7 @@
   "project": {
     "id": "conflict-export",
     "title": "Irreversible export and cancellation alignment",
-    "source": "derived from canonical alignment dossier"
+    "source": "alignment/manifest.yaml"
   },
   "summary": {
     "goal": "Align Finance and Support on the export lifecycle before implementation.",

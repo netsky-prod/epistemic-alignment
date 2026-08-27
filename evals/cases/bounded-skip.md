@@ -2,7 +2,7 @@
 
 ## Starting prompt
 
-"Correct a spelling mistake in an existing label without changing behavior."
+Exact request event: "Correct one spelling mistake in an existing label."
 
 ## Available evidence
 
@@ -11,8 +11,8 @@ stakeholder agreement.
 
 ## Scripted human answers
 
-The human agrees to skip alignment and records the short rationale in the work
-item.
+Exact human-answer event: "The human explicitly agreed to skip alignment for
+this one-label spelling correction."
 
 ## Expected dossier and Site behavior
 

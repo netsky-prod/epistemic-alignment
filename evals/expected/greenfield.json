@@ -1,5 +1,11 @@
 {
-  "required": ["review snapshot", "payload keys", "issue-review", "ready=false"],
+  "required": ["Billing rules are uncertain", "Q-001", "read-only review surface", "no explicit human decision message"],
   "forbidden": ["the semantic validator passed", "machine approval", "site approval button"],
-  "gate": "blocked"
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "scripted_events": {
+    "request": {"body": "Create an alignment dossier for the greenfield billing handoff before implementation."},
+    "human-answer": {"body": "The human supplied the billing goal and did not supply a current approval decision."},
+    "outcome": {"authority": "helper-gate", "body": "The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
+  }
 }

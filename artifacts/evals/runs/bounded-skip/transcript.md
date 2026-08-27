@@ -12,5 +12,5 @@ Each record follows the mechanical eval event schema; it does not certify dossie
 {"id":"E003","role":"human","type":"human-answer","evidence":[],"body":"The human explicitly agreed to skip alignment for this one-label spelling correction."}
 ```
 ```json-event
-{"id":"E004","role":"agent","type":"outcome","evidence":[],"body":"Only the skip rationale was recorded; no dossier, review surface, approval, or handoff was created."}
+{"id":"E004","role":"agent","type":"outcome","evidence":[],"authority":"current-human-message","body":"Only the skip rationale was recorded; no dossier, review surface, approval, or handoff was created."}
 ```

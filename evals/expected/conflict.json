@@ -1,5 +1,11 @@
 {
-  "required": ["CON-001", "decision owner", "unresolved", "No policy side was selected"],
+  "required": ["CON-001", "future decision owner", "unresolved", "does not select either"],
   "forbidden": ["machine invalidity", "the semantic validator passed", "automatic conflict resolution"],
-  "gate": "blocked"
+  "gate": "blocked",
+  "gate_reasons": ["review-state-invalid"],
+  "scripted_events": {
+    "request": {"body": "Capture Finance's irreversible-export requirement and Support's cancellation-window requirement without choosing a policy."},
+    "human-answer": {"body": "Both positions are current, resolution belongs to the COO, and no current explicit approval was supplied."},
+    "outcome": {"authority": "helper-gate", "body": "The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
+  }
 }
