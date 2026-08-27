@@ -3,8 +3,9 @@
 Date: 2026-08-27
 
 These are read-only, fresh-context applications of the shipped skills. They
-exercise skill behavior without adding an evaluator or semantic release gate.
-No application modified dossier, approval, handoff, or repository state.
+exercise resume and unavailable-transition behavior without adding an
+evaluator or semantic release gate. No application in this file modified
+dossier, approval, handoff, or repository state.
 
 ## Restart from files
 
@@ -25,30 +26,13 @@ Observed output:
 > `manifest.yaml` value `current_phase: discover` does not override the dossier
 > evidence; files define progress.
 
-## Independent skill invocation and boundary
+## Independent skill invocation
 
-Scenario: invoke `alignment:specify-behavior` directly with completed discovery
-files and `alignment/use-cases/UC-001.md`, without `align-project` or prior
-conversation.
-
-Observed output:
-
-> Input boundary: completed discovery context,
-> `alignment/use-cases/UC-001.md`, and its confirmed or proposed criteria.
->
-> Output boundary: linked, reviewable Gherkin behavior only—no APIs,
-> algorithms, architecture, or test mechanics.
->
-> Artifact: `alignment/features/uc-001.feature`, containing `alignment-meta`
-> with `"use_case":"UC-001"` and `"status":"proposed"`, stable
-> `@SCN-* @UC-001` tags, an applicable `Rule`, the main observable success
-> path, and any outcome-changing failure/recovery scenario. Assumptions and
-> unresolved questions remain linked rather than guessed away.
->
-> Snapshot action: add `features/uc-001.feature` to
-> `alignment/manifest.yaml`'s `snapshot_paths`.
->
-> Next transition: `alignment:model-architecture`.
+The earlier read-only prediction has been superseded by a real isolated
+`alignment:specify-behavior` invocation with committed input, produced output,
+manifest membership change, transcript, provenance, manual inspection, and a
+mechanical replay regression. See
+[`skill-invocations/specify-behavior/`](skill-invocations/specify-behavior/).
 
 ## Superpowers-unavailable delivery
 

@@ -117,6 +117,28 @@ class SkillTests(unittest.TestCase):
             with self.subTest(requirement=requirement):
                 self.assertIn(requirement, text)
 
+    def test_approve_handoff_checks_existing_handoff_before_normal_approval(self):
+        text = (ROOT / "skills/approve-handoff/SKILL.md").read_text(encoding="utf-8")
+        resume = text.index("## Pending Delivery Resume")
+        normal_approval = text.index("## Normal Approval")
+        self.assertLess(resume, normal_approval)
+
+        branch = " ".join(text[resume:normal_approval].split()).lower()
+        for requirement in [
+            "if `alignment/handoff.md` exists",
+            "scripts/alignment check <root> --json",
+            "when the check returns `ready: true`",
+            "do not ask for a decision",
+            "do not run `scripts/alignment decide`",
+            "do not run `scripts/alignment handoff`",
+            "deliver the existing handoff and dossier",
+            "when the check is not ready",
+            "do not deliver",
+            "return to presentation and reapproval",
+        ]:
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, branch)
+
     def test_build_review_requires_working_internal_traceability_links(self):
         text = " ".join(
             (ROOT / "skills/build-review/SKILL.md").read_text(encoding="utf-8").split()

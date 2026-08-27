@@ -1,8 +1,8 @@
 # Epistemic Alignment v0.1.0 completion audit
 
-Audit date: 2026-08-27
+Audit date: 2026-08-28
 
-Baseline: `885b6273a79623aa9fb0a8b0030eb7d4221b656f`
+Round-2 baseline: `40f62cf97cafd3cf6c667f64fdad07ddb231344f`
 
 Authority: the revised [thin-gate design](../../docs/superpowers/specs/2026-08-27-epistemic-alignment-plugin-design.md), not the superseded semantic-validator design.
 Allowed statuses: `proven`, `contradicted`, `missing`. Any status other than
@@ -20,7 +20,8 @@ approval reply does not require copying a digest.
 | --- | --- | --- |
 | Installable Codex plugin manifest | proven | [manifest](../../.codex-plugin/plugin.json); `tests.test_plugin_package`; pinned plugin-creator validation command in the [README](../../README.md) |
 | Exactly eight focused skills with `alignment:align-project` as front door | proven | [skills](../../skills); `tests.test_skills.SkillTests.test_exact_skill_set`; clean-install skill inventory in `tests.test_release` |
-| Each skill has one input/output boundary and can be invoked independently | proven | Boundary regression in [skill tests](../../tests/test_skills.py) and fresh-context independent `alignment:specify-behavior` invocation in [workflow application evidence](workflow-application-evidence.md) |
+| Each skill declares exactly one input/output boundary | proven | Boundary regression across all eight skills in [skill tests](../../tests/test_skills.py) |
+| Each skill can be invoked independently without the front door or prior conversation | proven | All eight interfaces are explicit in [skill tests](../../tests/test_skills.py); the required real fresh-context `alignment:specify-behavior` [input/result exercise](skill-invocations/specify-behavior), [transcript](skill-invocations/specify-behavior/transcript.md), bound [provenance](skill-invocations/specify-behavior/provenance.json), and mechanical replay in [release tests](../../tests/test_release.py) demonstrate the direct mechanics |
 | Portable templates/references for discovery, Cockburn, BDD, C4, ADR, review, approval, and handoff | proven | [templates](../../templates/alignment), [references](../../references), and `tests.test_skills.SkillTests.test_shared_method_references_exist` |
 | Python 3.9 standard-library helper for init, snapshot, decision, stale checks, and handoff | proven | [launcher](../../scripts/alignment), [source](../../src/epistemic_alignment), [installation requirements](../../docs/installation.md), and the full Python suite |
 | Codex Sites skill and stakeholder-review template | proven | [build-review skill](../../skills/build-review/SKILL.md), [Site template](../../adapters/codex-site/template), and adapter Site suite |
@@ -46,7 +47,7 @@ approval reply does not require copying a digest.
 | Discovery separates facts, statements, outcomes, constraints, inferences, assumptions, contradictions, and questions | proven | [discover-domain](../../skills/discover-domain/SKILL.md) and discovery templates under [templates](../../templates/alignment) |
 | Discovery asks one material question at a time | proven | [discover-domain](../../skills/discover-domain/SKILL.md) |
 | Cockburn use cases include the specified goal-oriented fields | proven | [Cockburn reference](../../references/cockburn.md), [write-use-cases](../../skills/write-use-cases/SKILL.md), and [approved UC-001](../../examples/approved-project/alignment/use-cases/UC-001.md) |
-| BDD covers observable priority paths/extensions with readable relationships and proposed inference labels | proven | [BDD reference](../../references/bdd.md), [specify-behavior](../../skills/specify-behavior/SKILL.md), and [approved feature](../../examples/approved-project/alignment/features/release-handoff.feature) |
+| BDD covers observable priority paths/extensions with readable relationships and proposed inference labels | proven | [BDD reference](../../references/bdd.md), [specify-behavior](../../skills/specify-behavior/SKILL.md), [approved feature](../../examples/approved-project/alignment/features/release-handoff.feature), and manually inspected [independent invocation](skill-invocations/specify-behavior/transcript.md) |
 | C4 context/containers/components are used at the specified depth | proven | [C4 reference](../../references/c4.md), [model-architecture](../../skills/model-architecture/SKILL.md), and approved architecture files under [examples](../../examples/approved-project/alignment/architecture) |
 | Material architecture choices become ADRs | proven | [model-architecture](../../skills/model-architecture/SKILL.md) and [ADR-001](../../examples/approved-project/alignment/decisions/ADR-001.md) |
 | Semantic review checks all seven specified gap classes and writes findings | proven | [semantic-review reference](../../references/semantic-review.md), [review skill](../../skills/review-alignment/SKILL.md), and [approved review](../../examples/approved-project/alignment/review.md) |
@@ -59,6 +60,7 @@ approval reply does not require copying a digest.
 | `rejected` closes without handoff | proven | [approval reference](../../references/approval.md), [recovery guide](../../docs/recovery.md), and gate outcome test |
 | `approved` unlocks handoff only for the unchanged reviewed snapshot | proven | [approval tests](../../tests/test_approval_gate.py), approved example gate, and [E2E evidence](e2e.json) |
 | Handoff transitions to `superpowers:brainstorming` with dossier context | proven | [approved handoff](../../examples/approved-project/alignment/handoff.md) and SHA-bound [intake evidence](superpowers-intake.md) |
+| Pending handoff resume rechecks freshness before any decision or delivery action | proven | Fresh-context RED/GREEN [resume transcript](skill-invocations/approve-handoff-resume.md), structured [provenance](skill-invocations/approve-handoff-resume.json), early [approve-handoff branch](../../skills/approve-handoff/SKILL.md), and mechanical regressions in [skill tests](../../tests/test_skills.py) and [release tests](../../tests/test_release.py) |
 | Superpowers-unavailable delivery stays pending without approval/handoff mutation | proven | RED/GREEN fresh-context application in [workflow application evidence](workflow-application-evidence.md), conditional [approve-handoff skill](../../skills/approve-handoff/SKILL.md), and durable skill regression in [skill tests](../../tests/test_skills.py) |
 
 ## Dossier contract

@@ -411,6 +411,122 @@ class ReleaseTests(unittest.TestCase):
                 self.assertTrue(resolved.exists(), target)
         self.assertGreater(len(local_links), 0)
 
+    def test_pending_handoff_resume_evidence_records_fresh_ready_and_stale_outcomes(self):
+        evidence_path = (
+            ROOT / "artifacts/release/skill-invocations/approve-handoff-resume.json"
+        )
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        cases = {(case["phase"], case["state"]): case for case in evidence["cases"]}
+
+        for state in ["unchanged", "stale"]:
+            red = cases[("RED", state)]
+            self.assertFalse(red["check_executed"])
+            self.assertTrue(red["delivered"])
+
+        ready = cases[("GREEN", "unchanged")]
+        self.assertTrue(ready["check_executed"])
+        self.assertTrue(ready["check_ready"])
+        self.assertTrue(ready["delivered"])
+        self.assertEqual(ready["check_reasons"], [])
+
+        stale = cases[("GREEN", "stale")]
+        self.assertTrue(stale["check_executed"])
+        self.assertFalse(stale["check_ready"])
+        self.assertFalse(stale["delivered"])
+        self.assertEqual(
+            stale["check_reasons"],
+            ["stale-approval", "hash-mismatch", "handoff-digest-mismatch"],
+        )
+
+        for case in [ready, stale]:
+            self.assertFalse(case["decision_executed"])
+            self.assertFalse(case["handoff_executed"])
+            self.assertTrue(case["review_state_unchanged"])
+            self.assertTrue(case["handoff_unchanged"])
+
+        fixture = evidence["fixture"]
+        for state in ["ready", "stale"]:
+            with self.subTest(state=state):
+                self.assertEqual(fixture[state]["before"], fixture[state]["after"])
+                self.assertEqual(
+                    fixture[state]["after"]["review_state_sha256"],
+                    sha256(APPROVED_EXAMPLE / "alignment/review-state.json"),
+                )
+                self.assertEqual(
+                    fixture[state]["after"]["handoff_sha256"],
+                    sha256(APPROVED_EXAMPLE / "alignment/handoff.md"),
+                )
+        self.assertEqual(
+            sha256(ROOT / "skills/approve-handoff/SKILL.md"),
+            evidence["green_skill_sha256"],
+        )
+        self.assertTrue((evidence_path.parent / evidence["transcript"]).is_file())
+
+    def test_real_independent_specify_behavior_invocation_changes_its_output_boundary(self):
+        exercise = ROOT / "artifacts/release/skill-invocations/specify-behavior"
+        evidence = json.loads((exercise / "provenance.json").read_text(encoding="utf-8"))
+        input_root = exercise / "input"
+        input_alignment = input_root / "alignment"
+        result_alignment = exercise / "result/alignment"
+        feature_path = Path("features/expedited-refund.feature")
+        input_manifest = json.loads((input_alignment / "manifest.yaml").read_text())
+        result_manifest = json.loads((result_alignment / "manifest.yaml").read_text())
+
+        self.assertFalse(evidence["semantic_certificate"])
+        self.assertTrue(evidence["actor"]["fresh_context"])
+        self.assertTrue(evidence["actor"]["ephemeral_session"])
+        self.assertNotIn(feature_path.as_posix(), input_manifest["snapshot_paths"])
+        self.assertEqual(
+            result_manifest["snapshot_paths"],
+            input_manifest["snapshot_paths"] + [feature_path.as_posix()],
+        )
+        self.assertTrue((result_alignment / feature_path).is_file())
+        self.assertEqual(
+            sorted(
+                path.relative_to(result_alignment).as_posix()
+                for path in result_alignment.rglob("*")
+                if path.is_file()
+            ),
+            [feature_path.as_posix(), "manifest.yaml"],
+        )
+
+        integrity = evidence["integrity"]
+        self.assertEqual(sha256(ROOT / evidence["scope"]["skill"]), integrity["skill_sha256"])
+        self.assertEqual(
+            sha256(ROOT / evidence["scope"]["required_reference"]),
+            integrity["reference_sha256"],
+        )
+        self.assertEqual(sha256(input_alignment / "manifest.yaml"), integrity["input_manifest_sha256"])
+        self.assertEqual(sha256(result_alignment / "manifest.yaml"), integrity["result_manifest_sha256"])
+        self.assertEqual(sha256(result_alignment / feature_path), integrity["created_feature_sha256"])
+
+        input_snapshot = run(ROOT / "scripts/alignment", "snapshot", input_root, "--json")
+        self.assertEqual(input_snapshot.returncode, 0, input_snapshot.stderr)
+        self.assertEqual(
+            json.loads(input_snapshot.stdout)["digest"],
+            integrity["input_snapshot_digest"],
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            replay_root = Path(directory)
+            shutil.copytree(input_alignment, replay_root / "alignment")
+            shutil.copy2(result_alignment / "manifest.yaml", replay_root / "alignment/manifest.yaml")
+            (replay_root / "alignment/features").mkdir()
+            shutil.copy2(
+                result_alignment / feature_path,
+                replay_root / "alignment" / feature_path,
+            )
+            result_snapshot = run(
+                ROOT / "scripts/alignment", "snapshot", replay_root, "--json"
+            )
+            self.assertEqual(result_snapshot.returncode, 0, result_snapshot.stderr)
+            self.assertEqual(
+                json.loads(result_snapshot.stdout)["digest"],
+                integrity["result_snapshot_digest"],
+            )
+
+        self.assertTrue((exercise / evidence["transcript"]).is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

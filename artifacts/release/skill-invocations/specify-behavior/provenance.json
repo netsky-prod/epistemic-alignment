@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "evidence_kind": "bounded-real-skill-invocation",
+  "recorded_date": "2026-08-28",
+  "semantic_certificate": false,
+  "actor": {
+    "runtime": "codex-cli 0.148.0-alpha.9",
+    "thread_id": "01a04508-d786-7a50-92b6-9008ef551f0e",
+    "fresh_context": true,
+    "ephemeral_session": true,
+    "sandbox": "workspace-write"
+  },
+  "scope": {
+    "skill": "skills/specify-behavior/SKILL.md",
+    "required_reference": "references/bdd.md",
+    "fixture": "artifacts/release/skill-invocations/specify-behavior/input",
+    "disallowed": [
+      "alignment:align-project",
+      "other alignment skills",
+      "examples/approved-project",
+      "artifacts/evals/runs"
+    ]
+  },
+  "integrity": {
+    "skill_sha256": "7398acaf7f44608352d0bbe5add9f2a04b201d9a9cb6bd96d5674411c172f93d",
+    "reference_sha256": "ff2ffe3c2904f24381fee531ae336eb806556eac6232445c42e7127b4968d626",
+    "input_manifest_sha256": "25388ab05641e3a96e1fe3b046ceb30ae6dfa9aaaa3369d2db20a31105b6676a",
+    "input_snapshot_digest": "28031662a6b1f1717a6007a6e5f5e2bcf6efff0f21d7548e7bc6894f37b6c2e7",
+    "result_manifest_sha256": "691ac7ad6764242998393a469140c9477c90c0d615814d5943b9f0872a498508",
+    "created_feature_sha256": "cc9bf187c57709f1a20a39cf79770f05562b1893e4777697a69d19e60faf3e31",
+    "result_snapshot_digest": "f54765b8884572872a563d7636b87feeddd484f1e3ce0b690526bbc9a5aad019"
+  },
+  "observed_files": {
+    "created": ["alignment/features/expedited-refund.feature"],
+    "modified": ["alignment/manifest.yaml"],
+    "snapshot_path_added": "features/expedited-refund.feature"
+  },
+  "transcript": "transcript.md"
+}

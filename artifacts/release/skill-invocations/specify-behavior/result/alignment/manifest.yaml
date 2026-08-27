@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "project": {"id": "expedited-refund-exercise", "title": "Expedited Refund Exercise"},
+  "current_phase": "behavior",
+  "completed_phases": ["discover", "use-cases"],
+  "snapshot_paths": [
+    "charter.md",
+    "stakeholders.md",
+    "assumptions.md",
+    "open-questions.md",
+    "use-cases/UC-101.md",
+    "features/expedited-refund.feature"
+  ],
+  "renderer": {
+    "adapter": "",
+    "status": "not_started",
+    "location": "",
+    "rendered_hash": ""
+  }
+}
