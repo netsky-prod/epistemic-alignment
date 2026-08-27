@@ -58,13 +58,14 @@ This boundary follows the successful Superpowers model: prompts and independent 
 - Portable templates and method references for discovery, Cockburn, BDD, C4, ADR, review, approval, and handoff.
 - A Python 3.9 standard-library helper for initialization, snapshot hashing, decision recording, stale-approval checks, and handoff generation.
 - A Codex Sites skill and template for stakeholder review.
-- Scenario evals covering the intended workflow and prohibited behavior.
+- Illustrative scenario examples covering the intended workflow and prohibited behavior for manual inspection.
 - Documentation of a common adapter contract for Claude, OpenCode, and Qwen Code.
 
 ### Excluded
 
 - A semantic parser or requirements compiler.
 - Machine certification of requirement quality, BDD coverage, C4 correctness, or stakeholder consensus.
+- A machine-assertion corpus or evaluator that treats scenario examples as a release gate.
 - Mandatory machine-readable metadata on every statement.
 - A durable orchestration runtime or replacement for Codex/Superpowers.
 - A hosted comment backend, user accounts, or interactive approval persistence inside the Site.
@@ -236,7 +237,7 @@ The helper can create `handoff.md` only when:
 - the recorded decision belongs to the current review issuance;
 - the review state and manifest use supported schema versions.
 
-The helper does not infer whether semantic findings are resolved. The approval skill must show `review.md` findings to the human and transcribe the explicit decision. Scenario evals verify that the agent never hides findings or self-approves.
+The helper does not infer whether semantic findings are resolved. The approval skill must show `review.md` findings to the human and transcribe the explicit decision. Scenario examples illustrate the protocol; deterministic helper tests cover the mechanical approval boundary.
 
 ## 9. Codex review Site
 
@@ -288,7 +289,7 @@ The local renderers can share implementation later; their host installation and 
 - rejection of stale, malformed, non-human-provenance, or unpresented approvals;
 - successful handoff with equal issued/rendered/approved/current hashes.
 
-### Skill scenario evals
+### Skill scenario examples
 
 - greenfield project;
 - existing repository change;
@@ -327,7 +328,7 @@ The Codex-first release is ready when:
 - the helper works on Python 3.9 without third-party runtime dependencies;
 - no semantic parser/validator is present;
 - helper tests prove snapshot and approval integrity;
-- scenario evals demonstrate the method and prohibited behaviors;
+- illustrative scenario examples document the method and prohibited behaviors for manual inspection;
 - the example Site builds and passes visual/accessibility inspection;
 - a clean-install E2E reaches Superpowers only after an unchanged, human-approved snapshot;
 - installation, usage, recovery, trust boundary, and removal are documented;
@@ -337,9 +338,9 @@ The Codex-first release is ready when:
 
 1. Keep the verified plugin skeleton and safe dossier initialization.
 2. Implement the dependency-free snapshot and approval helper test-first.
-3. Author and evaluate the alignment skill suite.
+3. Author the alignment skill suite and record illustrative scenarios.
 4. Build and visually verify the Codex Site adapter.
-5. Run scenario evals and a clean-install E2E.
+5. Manually inspect scenario examples and run a clean-install E2E.
 6. Document cross-harness adapters and prepare the repository for GitHub publication.
 
 Production Claude, OpenCode, and Qwen Code adapters remain separate implementation cycles after the Codex-first release proves the method and thin-gate contract.

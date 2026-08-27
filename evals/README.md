@@ -1,37 +1,16 @@
-# Alignment scenario evals
+# Alignment scenario examples
 
-This corpus records behavioral expectations for the portable alignment skills and
-thin approval gate. It is deliberately not an agent benchmark that declares a
-semantic pass: the skill cases preserve expected human-review behavior, while
-the two deterministic gate cases are re-executed against freshly copied
-fixtures by `scripts/check-evals`.
+The seven Markdown cases and their captured run directories are illustrative,
+non-authoritative examples of the alignment workflow and thin approval gate.
+They are provided for manual inspection and discussion only.
 
-Run the checker from the repository root:
+These examples are not a proof of behavior, a release gate, or a required
+validator. They do not certify dossier semantics, requirement quality,
+stakeholder agreement, presentation behavior, or human approval. Product tests
+for the deterministic snapshot and approval helper remain the verification
+surface for release work.
 
-```sh
-scripts/check-evals artifacts/evals/results.json
-```
-
-`evals/expected/` contains assertions and `artifacts/evals/results.json` points
-to five checked-in isolated runs: greenfield, existing repository, stakeholder
-conflict, critical unknown, and bounded skip. Each run contains its captured
-result plus a strict Markdown transcript made of sequential `json-event`
-records. Dossier-run events record normalized CLI argv/results, declared local
-evidence, the generated review-surface reference, and the final gate outcome.
-The expected fixture exact-binds each request, current human answer, and outcome
-authority; a different answer is a different run and cannot be substituted to
-manufacture approval or handoff.
-
-The checker binds those mechanical records back to the run: init arguments to
-the manifest project, snapshot output to a freshly recomputed digest, review
-issuance to `review-state.json` and the Site reference, and gate/result claims
-to a fresh helper check. `captured_output` is an exact structured mechanical
-record, not free text: its snapshot, issuance, Site identity/reference, gate,
-and approval/handoff/publication flags must all equal recomputed facts, and no
-unknown claim fields are accepted. Every evidence and Site `path`/`source`
-reference must resolve inside that isolated run. The checker also scans the
-complete authored run evidence for forbidden claims. This verifies recorded
-mechanics and artifact integrity; it does not parse dossier semantics, certify
-requirement quality, replay a hosted Site, or authenticate a human. The
-stale-approval and self-approval cases are separate deterministic fixtures
-re-executed with the standard-library helper.
+When reviewing an example, inspect its case Markdown together with the matching
+directory under `artifacts/evals/runs/`. Treat the captured files as historical
+examples: rerun relevant product commands against the current implementation
+when evidence about current behavior is required.

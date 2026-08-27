@@ -523,70 +523,36 @@ git commit -m "feat: present alignment dossiers with ChatGPT Sites"
 
 ---
 
-### Task 6: Scenario evals and cross-harness adapter contract
+### Task 6: Scenario examples and cross-harness adapter contract
 
 **Files:**
 - Create: `adapters/adapter-contract.md`
 - Create: `adapters/{claude,opencode,qwen-code}.md`
 - Create: `evals/README.md`
 - Create: `evals/cases/{greenfield,existing-repo,conflict,critical-unknown,bounded-skip,stale-approval,self-approval}.md`
-- Create: `evals/expected/*.json`
-- Create: `scripts/check-evals`
-- Create: `tests/test_evals.py`
-- Create: `artifacts/evals/results.json`
+- Create: `artifacts/evals/runs/**`
 
 **Interfaces:**
 - Consumes: installed skills, helper commands, and Sites adapter.
-- Produces: seven reproducible behavioral cases; adapter input/output contract; concrete host road maps.
+- Produces: seven illustrative, manually inspectable scenario examples; adapter input/output contract; concrete host road maps.
 
-- [ ] **Step 1: Write failing corpus tests**
+- [ ] **Step 1: Author scenario examples and adapter docs**
 
-```python
-# tests/test_evals.py
-import json
-import unittest
-from pathlib import Path
+Each case includes a starting prompt, available evidence, scripted human answers, expected dossier/Site behavior, forbidden claims, and a recorded gate outcome. Conflict and critical-unknown cases preserve findings rather than claim machine invalidity; stale/self-approval cases show the thin-gate outcome. The adapter contract takes dossier path, snapshot paths/hash, semantic review, and host capabilities and returns adapter/version/location/status/rendered hash/warnings. Claude uses an Artifact; OpenCode and Qwen Code use a shared local static renderer with separate extension metadata and preview instructions.
 
-ROOT = Path(__file__).parents[1]
-NAMES = {"greenfield", "existing-repo", "conflict", "critical-unknown", "bounded-skip", "stale-approval", "self-approval"}
+- [ ] **Step 2: Record illustrative runs**
 
+Install the development plugin and run each case in an isolated fixture. Capture dossier files, Site reference where applicable, transcript excerpts needed to explain human interaction, and the gate outcome. Keep the case Markdown and captured run directories as non-authoritative human examples; do not add a checker, machine assertions, release gate, or source-presence test for them.
 
-class EvalTests(unittest.TestCase):
-    def test_cases_and_assertions_are_complete(self):
-        self.assertEqual({p.stem for p in (ROOT / "evals/cases").glob("*.md")}, NAMES)
-        self.assertEqual({p.stem for p in (ROOT / "evals/expected").glob("*.json")}, NAMES)
-        for name in NAMES:
-            expected = json.loads((ROOT / f"evals/expected/{name}.json").read_text())
-            self.assertTrue(expected["required"])
-            self.assertTrue(expected["forbidden"])
-            self.assertIn(expected["gate"], {"approved", "blocked", "skipped", "invalidated"})
-```
+- [ ] **Step 3: Manually inspect examples and run product verification**
 
-- [ ] **Step 2: Run tests and confirm corpus is absent**
+Review the cases and captured runs as human examples. Run the product test suite and the deterministic helper commands relevant to current release work; do not treat the scenario corpus as machine proof.
 
-Run: `python3 -m unittest tests.test_evals -v`
-
-Expected: assertion failure for empty case sets.
-
-- [ ] **Step 3: Author evals, checker, and adapter docs**
-
-Each case includes starting prompt, available evidence, scripted human answers, expected dossier/Site behavior, forbidden claims, and gate result. The checker compares captured results with assertions. Conflict and critical-unknown cases must preserve findings rather than claim machine invalidity; stale/self-approval cases must fail through the thin gate. Make `scripts/check-evals` executable before its first run.
-
-The adapter contract takes dossier path, snapshot paths/hash, semantic review, and host capabilities and returns adapter/version/location/status/rendered hash/warnings. Claude uses an Artifact; OpenCode and Qwen Code use a shared local static renderer with separate extension metadata and preview instructions.
-
-- [ ] **Step 4: Execute and record eval evidence**
-
-Install the development plugin and run each case in an isolated fixture. Capture dossier files, Site reference where applicable, transcript excerpts needed to prove human interaction, and gate result.
-
-Run: `scripts/check-evals artifacts/evals/results.json`
-
-Expected: seven cases pass and no forbidden semantic-certification or self-approval behavior occurs.
-
-- [ ] **Step 5: Commit evals and adapter contract**
+- [ ] **Step 4: Commit examples and adapter contract**
 
 ```bash
-git add adapters evals scripts/check-evals tests/test_evals.py artifacts/evals
-git commit -m "test: verify thin-gate alignment behavior"
+git add adapters evals artifacts/evals/runs
+git commit -m "docs: add alignment scenario examples"
 ```
 
 ---
@@ -677,7 +643,7 @@ git commit -m "docs: prepare thin-gate Codex release"
 - Create: `artifacts/release/completion-audit.md`
 
 **Interfaces:**
-- Consumes: revised spec and all implementation/eval/release evidence.
+- Consumes: revised spec, implementation evidence, illustrative scenario examples, and release evidence.
 - Produces: clean v0.1.0 repository and requirement-by-requirement proof without pushing or inventing a remote.
 
 - [ ] **Step 1: Write the completion matrix**
@@ -689,13 +655,12 @@ Create one row for every v1 scope item, workflow phase, dossier artifact, thin-g
 ```bash
 git diff --check
 PYTHONPATH=src python3 -m unittest discover -s tests -v
-scripts/check-evals artifacts/evals/results.json
 pnpm --dir adapters/codex-site/template test
 ! rg -n "class Entity|ValidationReport|the semantic validator passed|coverage.*complete" src tests
 git status --short
 ```
 
-Expected: no whitespace errors; all suites pass; no semantic parser/validator implementation is found; only intended audit/release metadata remains.
+Expected: no whitespace errors; all product suites pass; no semantic parser/validator implementation is found; only intended audit/release metadata remains.
 
 - [ ] **Step 3: Resolve every non-proven audit row**
 
