@@ -1,13 +1,16 @@
 # Bounded-skip eval transcript
 
-Request: Correct one spelling mistake in an existing label.
+Each record follows the mechanical eval event schema; it does not certify dossier semantics.
 
-Qualification: The change is bounded. It does not change behavior, the
-interface, architecture, or any stakeholder agreement.
-
-Human answer: The human explicitly agreed to skip alignment and recorded this
-rationale: “This is a one-label spelling correction with no behavior,
-interface, architecture, or stakeholder-agreement change.”
-
-Outcome: Recorded the skip rationale only. No alignment dossier, approval,
-handoff, or Site was created.
+```json-event
+{"id":"E001","role":"human","type":"request","evidence":[],"body":"Correct one spelling mistake in an existing label."}
+```
+```json-event
+{"id":"E002","role":"agent","type":"qualification","evidence":[],"body":"The change was classified as bounded because it changes no behavior, interface, architecture, or stakeholder agreement."}
+```
+```json-event
+{"id":"E003","role":"human","type":"human-answer","evidence":[],"body":"The human explicitly agreed to skip alignment for this one-label spelling correction."}
+```
+```json-event
+{"id":"E004","role":"agent","type":"outcome","evidence":[],"body":"Only the skip rationale was recorded; no dossier, review surface, approval, or handoff was created."}
+```

@@ -1,78 +1,40 @@
 # Conflict eval transcript
 
-All actions below were run in the assigned worktree. The dossier preserves both
-current stakeholder requirements. No policy side was selected, and no decision,
-handoff, publishing, or approval action was performed.
+Each record follows the mechanical eval event schema; it does not certify dossier semantics.
 
-## Scripted request and human answers
-
-Request: “Finance requires irreversible exports; Support requires a cancellation
-window. Capture the conflict before implementation.”
-
-Human answers captured:
-
-1. Finance's statement is current.
-2. Support's statement is current.
-3. Resolution is deferred to the COO, who is the named future decision owner.
-4. No current explicit approval was supplied.
-
-## Actions and raw helper output
-
-Initialization command:
-
-```text
-scripts/alignment init artifacts/evals/runs/conflict --project-id conflict-export --title 'Irreversible export and cancellation alignment'
+```json-event
+{"id":"E001","role":"human","type":"request","evidence":[],"body":"Capture Finance's irreversible-export requirement and Support's cancellation-window requirement without choosing a policy."}
 ```
-
-Output:
-
-```text
-artifacts/evals/runs/conflict/alignment
+```json-event
+{"id":"E002","role":"human","type":"human-answer","evidence":[],"body":"Both positions are current, resolution belongs to the COO, and no current explicit approval was supplied."}
 ```
-
-Created concise canonical discovery, use-case, behavior, architecture, and
-decision artifacts. Updated `alignment/manifest.yaml` so all 12 current
-reviewable files are in `snapshot_paths`.
-
-Snapshot command:
-
-```text
-scripts/alignment snapshot artifacts/evals/runs/conflict --json
+```json-event
+{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","conflict-export","--title","Irreversible Export and Cancellation Alignment"]}
 ```
-
-Raw output:
-
-```text
-{"algorithm": "sha256-v1", "digest": "e1e57196823e6c7d81a0221c36b378b9b49abc5cebe61359c3e88f6f3475b183", "paths": ["architecture/components.md", "architecture/containers.md", "architecture/context.md", "assumptions.md", "charter.md", "decisions/ADR-001.md", "features/export-cancellation.feature", "glossary.md", "open-questions.md", "review.md", "stakeholders.md", "use-cases/UC-001.md"]}
+```json-event
+{"id":"E004","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A001","exit_code":0,"output":{"alignment":"alignment"}}
 ```
-
-Derived `alignment-review/site-review.json` with the exact snapshot digest and
-the conflict visibly labelled `unresolved`.
-
-Issue-review command:
-
-```text
-scripts/alignment issue-review artifacts/evals/runs/conflict --adapter codex-sites --status presented --location alignment-review/site-review.json
+```json-event
+{"id":"E005","role":"agent","type":"command","evidence":[],"action_id":"A002","operation":"snapshot","argv":["scripts/alignment","snapshot","<run-dir>","--json"]}
 ```
-
-Raw output:
-
-```text
-sha256-v1:e1e57196823e6c7d81a0221c36b378b9b49abc5cebe61359c3e88f6f3475b183
+```json-event
+{"id":"E006","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A002","exit_code":0,"output":{"algorithm":"sha256-v1","digest":"a4f6ae31caa93949e9909a70978279333e49a8bb5145da86b1d82920fc34d494","paths":["architecture/components.md","architecture/containers.md","architecture/context.md","assumptions.md","charter.md","decisions/ADR-001.md","features/export-cancellation.feature","glossary.md","open-questions.md","review.md","stakeholders.md","use-cases/UC-001.md"]}}
 ```
-
-Gate command:
-
-```text
-scripts/alignment check artifacts/evals/runs/conflict --json
+```json-event
+{"id":"E007","role":"agent","type":"artifact","evidence":["alignment-review/site-review.json"],"artifact_type":"review-surface","path":"alignment-review/site-review.json"}
 ```
-
-Raw output (exit status 1):
-
-```text
-{"digest": "e1e57196823e6c7d81a0221c36b378b9b49abc5cebe61359c3e88f6f3475b183", "ready": false, "reasons": ["review-state-invalid"]}
+```json-event
+{"id":"E008","role":"agent","type":"command","evidence":[],"action_id":"A003","operation":"issue-review","argv":["scripts/alignment","issue-review","<run-dir>","--adapter","codex-sites","--status","presented","--location","alignment-review/site-review.json"]}
 ```
-
-The helper gate is blocked because no decision record exists. Semantically,
-`CON-001` is still open and the human supplied no approval. The derived review
-is a draft/reference and was not published.
+```json-event
+{"id":"E009","role":"tool","type":"command-result","evidence":["alignment/review-state.json"],"action_id":"A003","exit_code":0,"output":{"algorithm":"sha256-v1","digest":"a4f6ae31caa93949e9909a70978279333e49a8bb5145da86b1d82920fc34d494"}}
+```
+```json-event
+{"id":"E010","role":"agent","type":"command","evidence":[],"action_id":"A004","operation":"check-gate","argv":["scripts/alignment","check","<run-dir>","--json"]}
+```
+```json-event
+{"id":"E011","role":"tool","type":"command-result","evidence":["alignment/review-state.json"],"action_id":"A004","exit_code":1,"output":{"digest":"a4f6ae31caa93949e9909a70978279333e49a8bb5145da86b1d82920fc34d494","ready":false,"reasons":["review-state-invalid"]}}
+```
+```json-event
+{"id":"E012","role":"agent","type":"outcome","evidence":["alignment/review-state.json"],"body":"The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
+```

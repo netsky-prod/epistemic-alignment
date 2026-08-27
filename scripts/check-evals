@@ -122,24 +122,120 @@ def scoped_run_texts(name: str, run_dir: Path) -> List[str]:
     return texts
 
 
-def validate_transcript(name: str, text: str) -> None:
-    """Require an auditable Markdown event record, not a keyword placeholder."""
-    if len(text.strip()) < 200 or not re.search(r"^# .+transcript\s*$", text, re.MULTILINE | re.IGNORECASE):
-        fail(f"{name} transcript has no meaningful transcript header and body")
+EVENT_KEYS = {
+    "request": {"id", "role", "type", "evidence", "body"},
+    "human-answer": {"id", "role", "type", "evidence", "body"},
+    "command": {"id", "role", "type", "evidence", "action_id", "operation", "argv"},
+    "command-result": {"id", "role", "type", "evidence", "action_id", "exit_code", "output"},
+    "artifact": {"id", "role", "type", "evidence", "artifact_type", "path"},
+    "qualification": {"id", "role", "type", "evidence", "body"},
+    "outcome": {"id", "role", "type", "evidence", "body"},
+}
+EVENT_ROLES = {
+    "request": "human", "human-answer": "human", "command": "agent",
+    "command-result": "tool", "artifact": "agent", "qualification": "agent",
+    "outcome": "agent",
+}
+DOSSIER_EVENT_TYPES = [
+    "request", "human-answer", "command", "command-result", "command",
+    "command-result", "artifact", "command", "command-result", "command",
+    "command-result", "outcome",
+]
+DOSSIER_OPERATIONS = ["init", "snapshot", "issue-review", "check-gate"]
+
+
+def transcript_events(name: str, text: str) -> List[Dict[str, Any]]:
+    """Decode the explicit mechanical event schema embedded in Markdown."""
+    if not re.search(r"^# .+transcript\s*$", text, re.MULTILINE | re.IGNORECASE):
+        fail(f"{name} transcript event schema requires a transcript heading")
+    blocks = re.findall(r"```json-event\s*\n(.*?)\n```", text, re.DOTALL)
+    if not blocks:
+        fail(f"{name} transcript event schema has no json-event records")
+    events: List[Dict[str, Any]] = []
+    for index, block in enumerate(blocks, start=1):
+        try:
+            event = json.loads(block)
+        except json.JSONDecodeError as error:
+            fail(f"{name} transcript event schema record E{index:03d} is invalid JSON: {error}")
+        if not isinstance(event, dict):
+            fail(f"{name} transcript event schema record E{index:03d} is not an object")
+        event_type = event.get("type")
+        if event_type not in EVENT_KEYS or set(event) != EVENT_KEYS[event_type]:
+            fail(f"{name} transcript event schema record E{index:03d} has invalid fields")
+        if event.get("id") != f"E{index:03d}" or event.get("role") != EVENT_ROLES[event_type]:
+            fail(f"{name} transcript event schema record E{index:03d} has invalid identity or role")
+        evidence = event.get("evidence")
+        if not isinstance(evidence, list) or not all(isinstance(item, str) and item for item in evidence):
+            fail(f"{name} transcript event schema record E{index:03d} has invalid evidence")
+        for field in ("body", "path", "artifact_type"):
+            if field in event and (not isinstance(event[field], str) or not event[field].strip()):
+                fail(f"{name} transcript event schema record E{index:03d} has empty {field}")
+        events.append(event)
+    return events
+
+
+def validate_transcript(name: str, run_dir: Path, text: str,
+                        evidence_files: List[str], site_reference: Optional[str],
+                        snapshot: Optional[Any] = None,
+                        actual_gate: Optional[Any] = None) -> None:
+    """Verify interaction mechanics without judging dossier semantics."""
+    events = transcript_events(name, text)
     if name == "bounded-skip":
-        for label in ("Request:", "Qualification:", "Human answer:", "Outcome:"):
-            if not re.search(rf"^{re.escape(label)}", text, re.MULTILINE):
-                fail(f"{name} transcript is missing the {label[:-1]} event")
+        expected = ["request", "qualification", "human-answer", "outcome"]
+        if [event["type"] for event in events] != expected:
+            fail(f"{name} transcript event schema must record request, qualification, human answer, and outcome")
+        for event in events:
+            for reference in event["evidence"]:
+                local_file(run_dir, reference, f"{name} transcript evidence")
         return
-    headings = re.findall(r"^## (.+)$", text, re.MULTILINE)
-    if len(headings) < 2:
-        fail(f"{name} transcript must contain multiple event sections")
-    if not any(re.search(r"request|initialization", heading, re.IGNORECASE) for heading in headings):
-        fail(f"{name} transcript has no request or initialization section")
-    if not any(re.search(r"action|output|gate|review|snapshot", heading, re.IGNORECASE) for heading in headings):
-        fail(f"{name} transcript has no action, output, review, snapshot, or gate section")
-    if "```" not in text and not re.search(r"^\d+\. ", text, re.MULTILINE):
-        fail(f"{name} transcript has no structured actions or raw output")
+
+    if [event["type"] for event in events] != DOSSIER_EVENT_TYPES:
+        fail(f"{name} transcript event schema has an invalid dossier event sequence")
+    commands = [event for event in events if event["type"] == "command"]
+    if [event.get("operation") for event in commands] != DOSSIER_OPERATIONS:
+        fail(f"{name} transcript event schema has an invalid operation sequence")
+    if [event.get("action_id") for event in commands] != ["A001", "A002", "A003", "A004"]:
+        fail(f"{name} transcript event schema has invalid action identities")
+    for event in events:
+        for reference in event["evidence"]:
+            if reference not in evidence_files:
+                fail(f"{name} transcript evidence is not declared by the run: {reference}")
+            local_file(run_dir, reference, f"{name} transcript evidence")
+    for command in commands:
+        argv = command.get("argv")
+        operation = command["operation"]
+        cli_operation = "check" if operation == "check-gate" else operation
+        if (not isinstance(command.get("action_id"), str)
+                or not re.fullmatch(r"A\d{3}", command["action_id"])
+                or not isinstance(argv, list) or len(argv) < 3
+                or not all(isinstance(arg, str) and arg for arg in argv)
+                or Path(argv[0]).name != "alignment" or argv[1] != cli_operation
+                or argv[2] != "<run-dir>"):
+            fail(f"{name} transcript event schema has an invalid {operation} command")
+    results = [event for event in events if event["type"] == "command-result"]
+    for command, result in zip(commands, results):
+        if (result.get("action_id") != command["action_id"]
+                or not isinstance(result.get("exit_code"), int)
+                or not isinstance(result.get("output"), dict) or not result["output"]):
+            fail(f"{name} transcript event schema has an unpaired command result")
+    if [result["exit_code"] for result in results] != [0, 0, 0, 1]:
+        fail(f"{name} transcript event schema has invalid command exit codes")
+    artifact = next(event for event in events if event["type"] == "artifact")
+    site_path = site_reference.split("#", 1)[0] if isinstance(site_reference, str) else None
+    if (artifact["artifact_type"] != "review-surface" or artifact["path"] != site_path
+            or artifact["evidence"] != [site_path]):
+        fail(f"{name} transcript event schema does not bind the review surface")
+    if snapshot is None or actual_gate is None:
+        fail(f"{name} transcript event schema was not checked against the run")
+    snapshot_output = results[1]["output"]
+    gate_output = results[3]["output"]
+    if snapshot_output != {"algorithm": snapshot.algorithm, "digest": snapshot.digest, "paths": snapshot.paths}:
+        fail(f"{name} transcript snapshot result does not match the current dossier")
+    if results[2]["output"] != {"algorithm": "sha256-v1", "digest": snapshot.digest}:
+        fail(f"{name} transcript issue-review result does not match the current dossier")
+    expected_gate = {"digest": actual_gate.digest, "ready": actual_gate.ready, "reasons": actual_gate.reasons}
+    if gate_output != expected_gate:
+        fail(f"{name} transcript gate result does not match the helper replay")
 
 
 def fixture_dossier(directory: str) -> Path:
@@ -211,7 +307,6 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
         if required_file not in record["evidence_files"]:
             fail(f"{name} does not list required evidence: {required_file}")
     transcript = local_file(run_dir, "transcript.md", f"{name} transcript")
-    validate_transcript(name, transcript.read_text(encoding="utf-8"))
     site_reference = record.get("site_reference")
     site_path = local_file(run_dir, site_reference, f"{name} Site reference")
     site = load_json(site_path)
@@ -254,6 +349,10 @@ def validate_dossier_run(name: str, run_dir: Path, record: Dict[str, Any], gate:
     actual_gate = check_gate(alignment)
     if actual_gate.ready or gate != "blocked" or record["gate_reasons"] != actual_gate.reasons:
         fail(f"{name} claimed gate does not match the current helper gate")
+    validate_transcript(
+        name, run_dir, transcript.read_text(encoding="utf-8"),
+        record["evidence_files"], site_reference, snapshot, actual_gate,
+    )
     required, forbidden, expected_gate = expected_for(name)
     if expected_gate != gate:
         fail(f"{name} expected gate does not match run gate")
@@ -269,7 +368,10 @@ def validate_bounded_skip(run_dir: Path, record: Dict[str, Any], gate: str) -> N
     if set(record["evidence_files"]) != {"transcript.md"}:
         fail("bounded-skip must use its explicit transcript as the only evidence")
     transcript = local_file(run_dir, "transcript.md", "bounded-skip transcript")
-    validate_transcript(name, transcript.read_text(encoding="utf-8"))
+    validate_transcript(
+        name, run_dir, transcript.read_text(encoding="utf-8"),
+        record["evidence_files"], None,
+    )
     if (run_dir / "alignment").exists() or (run_dir / "alignment-review").exists() or list(run_dir.rglob("handoff.md")):
         fail("bounded-skip must not create a dossier, Site, or handoff")
     required, forbidden, expected_gate = expected_for(name)

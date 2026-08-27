@@ -113,6 +113,9 @@ class EvalTests(unittest.TestCase):
             self.assertIn("capability", text.lower())
             self.assertIn("fallback", text.lower())
 
+        self.assertIn('"rendered_hash": "<input snapshot sha256-v1 digest>"', contract)
+        self.assertNotIn('"rendered_hash": "<issued sha256-v1 digest>"', contract)
+
     def test_checker_rejects_empty_or_gibberish_run_capture(self):
         for capture in ([], ["unrelated text"]):
             with self.subTest(capture=capture):
@@ -243,6 +246,43 @@ class EvalTests(unittest.TestCase):
                 "review snapshot payload keys issue-review ready=false keyword gibberish\n",
                 encoding="utf-8",
             )
+            self.assertNotEqual(self.run_checker(results_path).returncode, 0)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_formatted_nonsense_transcript(self):
+        temporary, run, results_path = self.copied_run("critical-unknown")
+        try:
+            (run / "transcript.md").write_text(
+                """# Critical-unknown eval transcript
+
+## Request and initialization event
+
+1. review snapshot payload keys issue-review check gate
+
+## Action, output, review, snapshot, and gate event
+
+1. review snapshot payload keys issue-review check gate
+2. review snapshot payload keys issue-review check gate
+3. review snapshot payload keys issue-review check gate
+4. review snapshot payload keys issue-review check gate
+5. review snapshot payload keys issue-review check gate
+6. review snapshot payload keys issue-review check gate
+""",
+                encoding="utf-8",
+            )
+            result = self.run_checker(results_path)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("event schema", result.stderr)
+        finally:
+            temporary.cleanup()
+
+    def test_checker_rejects_duplicate_transcript_action_ids(self):
+        temporary, run, results_path = self.copied_run("conflict")
+        try:
+            transcript = run / "transcript.md"
+            text = transcript.read_text(encoding="utf-8")
+            transcript.write_text(text.replace('"action_id":"A004"', '"action_id":"A001"'), encoding="utf-8")
             self.assertNotEqual(self.run_checker(results_path).returncode, 0)
         finally:
             temporary.cleanup()

@@ -1,29 +1,40 @@
 # Existing-repository alignment transcript
 
-## Scripted request
+Each record follows the mechanical eval event schema; it does not certify dossier semantics.
 
-Human asked to establish current behavior, stakeholders, and architectural impact for a proposed health-data import in the existing product.
-
-## Exact human answers captured
-
-1. Goal confirmation: the human confirmed the product outcome of importing health data.
-2. Retention answer: the human left retention open; no duration, deletion trigger, or audit lifecycle was provided.
-3. Approval: no current explicit approval decision was supplied.
-
-## Actions
-
-1. Initialized `alignment/` with project id `existing-repo-export` and title `Health-data import alignment`.
-2. Recorded repository facts separately from stakeholder statements, inferences, assumptions, and open questions.
-3. Created `alignment/use-cases/UC-001.md` using the Cockburn slots and linked it to discovery IDs.
-4. Created `alignment/features/health-data-import.feature` with proposed scenarios for success, unresolved retention, and recoverable invalid input.
-5. Created C4 context, container, and component views plus proposed `alignment/decisions/ADR-001.md`.
-6. Created `alignment/review.md` with evidence-backed findings and dispositions; `F-001` remains an open blocker.
-7. Updated `alignment/manifest.yaml` so every current canonical reviewable file is in `snapshot_paths`.
-8. Computed snapshot `sha256-v1:e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd` over the listed dossier files.
-9. Created the derived read-only draft/reference at `alignment-review/site-review.json`, embedding that exact snapshot hash and membership.
-10. Issued the review snapshot with adapter `codex-sites`, status `presented`, and location `alignment-review/site-review.json`; the payload remains a draft/reference.
-11. Did not publish a Site, record an approval, or create a handoff.
-
-## Final gate reasoning
-
-Gate: **blocked**. The goal is confirmed, but retention (`UQ-001`) and related policy details remain unresolved; the architecture and behavior are proposals. No current explicit human approval message exists, so the helper reports `review-state-invalid` (no decision recorded) and does not permit handoff. The draft Site is presentation input only and cannot change the gate.
+```json-event
+{"id":"E001","role":"human","type":"request","evidence":[],"body":"Establish current behavior, stakeholders, and architectural impact for health-data import in the existing product."}
+```
+```json-event
+{"id":"E002","role":"human","type":"human-answer","evidence":[],"body":"The goal was confirmed, retention remained open, and no current explicit approval was supplied."}
+```
+```json-event
+{"id":"E003","role":"agent","type":"command","evidence":[],"action_id":"A001","operation":"init","argv":["scripts/alignment","init","<run-dir>","--project-id","health-data-import","--title","Health Data Import Alignment"]}
+```
+```json-event
+{"id":"E004","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A001","exit_code":0,"output":{"alignment":"alignment"}}
+```
+```json-event
+{"id":"E005","role":"agent","type":"command","evidence":[],"action_id":"A002","operation":"snapshot","argv":["scripts/alignment","snapshot","<run-dir>","--json"]}
+```
+```json-event
+{"id":"E006","role":"tool","type":"command-result","evidence":["alignment/manifest.yaml"],"action_id":"A002","exit_code":0,"output":{"algorithm":"sha256-v1","digest":"e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd","paths":["architecture/components.md","architecture/containers.md","architecture/context.md","assumptions.md","charter.md","decisions/ADR-001.md","features/health-data-import.feature","glossary.md","open-questions.md","review.md","stakeholders.md","use-cases/UC-001.md"]}}
+```
+```json-event
+{"id":"E007","role":"agent","type":"artifact","evidence":["alignment-review/site-review.json"],"artifact_type":"review-surface","path":"alignment-review/site-review.json"}
+```
+```json-event
+{"id":"E008","role":"agent","type":"command","evidence":[],"action_id":"A003","operation":"issue-review","argv":["scripts/alignment","issue-review","<run-dir>","--adapter","codex-sites","--status","presented","--location","alignment-review/site-review.json"]}
+```
+```json-event
+{"id":"E009","role":"tool","type":"command-result","evidence":["alignment/review-state.json"],"action_id":"A003","exit_code":0,"output":{"algorithm":"sha256-v1","digest":"e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd"}}
+```
+```json-event
+{"id":"E010","role":"agent","type":"command","evidence":[],"action_id":"A004","operation":"check-gate","argv":["scripts/alignment","check","<run-dir>","--json"]}
+```
+```json-event
+{"id":"E011","role":"tool","type":"command-result","evidence":["alignment/review-state.json"],"action_id":"A004","exit_code":1,"output":{"digest":"e3b27053224062d9545355cb02d015ecb62ee2e0272cec5678d2c031317cc7bd","ready":false,"reasons":["review-state-invalid"]}}
+```
+```json-event
+{"id":"E012","role":"agent","type":"outcome","evidence":["alignment/review-state.json"],"body":"The review surface was presented, the helper gate remained blocked, and no approval or handoff was recorded."}
+```

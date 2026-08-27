@@ -40,7 +40,7 @@ The adapter returns one JSON-compatible result:
   "version": "1.0",
   "location": "site://draft-or-host-reference",
   "status": "draft",
-  "rendered_hash": "<issued sha256-v1 digest>",
+  "rendered_hash": "<input snapshot sha256-v1 digest>",
   "warnings": ["A finding remains unresolved"]
 }
 ```
