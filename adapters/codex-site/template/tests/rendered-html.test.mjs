@@ -1,0 +1,49 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+async function render() {
+  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+
+  return worker.fetch(
+    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+}
+
+test("renders all seven dossier sections and exposes epistemic state labels", async () => {
+  const response = await render();
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  const text = html.replace(/<!--.*?-->/g, "");
+
+  for (const id of [
+    "summary",
+    "stakeholders",
+    "use-cases",
+    "behavior",
+    "architecture",
+    "decisions-and-risks",
+    "review-readiness",
+  ]) {
+    assert.match(html, new RegExp(`id="${id}"`));
+  }
+
+  assert.match(text, /Status: Proposed/);
+  assert.match(text, /Status: Uncertain/);
+  assert.match(text, /Status: Conflicting/);
+});
+
+test("keeps findings before readiness and provides a C4 text fallback", async () => {
+  const response = await render();
+  const html = await response.text();
+
+  const findingsIndex = html.indexOf("Review findings");
+  const readinessIndex = html.indexOf("Snapshot readiness");
+  assert.ok(findingsIndex >= 0 && findingsIndex < readinessIndex);
+  assert.match(html, /C4 textual fallback/);
+  assert.match(html, /Snapshot hash/);
+  assert.doesNotMatch(html, /Approve dossier|Record approval/);
+});
