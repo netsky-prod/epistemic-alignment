@@ -9,10 +9,13 @@ SITE = ROOT / "adapters/codex-site/template"
 
 class CodexSiteTests(unittest.TestCase):
     def test_hosting_has_no_persistence_bindings(self):
-        self.assertEqual(
-            json.loads((SITE / ".openai/hosting.json").read_text()),
-            {"d1": None, "r2": None},
-        )
+        hosting = json.loads((SITE / ".openai/hosting.json").read_text())
+        self.assertEqual(hosting["d1"], None)
+        self.assertEqual(hosting["r2"], None)
+        self.assertLessEqual(set(hosting), {"project_id", "d1", "r2"})
+        if "project_id" in hosting:
+            self.assertIsInstance(hosting["project_id"], str)
+            self.assertTrue(hosting["project_id"])
 
     def test_review_payload_is_presentational(self):
         data = json.loads((SITE / "public/review.json").read_text())
