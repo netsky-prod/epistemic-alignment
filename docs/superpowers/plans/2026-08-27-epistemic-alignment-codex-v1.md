@@ -1,5 +1,7 @@
 # Epistemic Alignment Codex v1 Implementation Plan
 
+> **Superseded:** After reviewed Tasks 1–2, the user rejected the full semantic validator. Continue with `docs/superpowers/plans/2026-08-27-epistemic-alignment-thin-gate-v1.md`. Tasks 3–12 below are retained only as design history and must not be executed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build, install, and verify a Codex-first plugin package that creates traceable discovery, Cockburn use cases, BDD, C4, a ChatGPT Sites review, a human-only approval record, and a hash-verified handoff to Superpowers.
