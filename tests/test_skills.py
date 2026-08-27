@@ -87,6 +87,13 @@ class SkillTests(unittest.TestCase):
         self.assertIn("scripts/alignment check <root>", text)
         self.assertIn("scripts/alignment handoff <root>", text)
 
+    def test_handoff_skill_shows_repeatable_decision_finding_flags(self):
+        text = (ROOT / "skills/approve-handoff/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "scripts/alignment decide <root> --decision approved --reviewer <label> --provenance human-message --review-hash <hash> --acknowledged-finding ID [--acknowledged-finding ID ...]",
+            text,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
