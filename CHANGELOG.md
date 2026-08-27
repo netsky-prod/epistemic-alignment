@@ -12,6 +12,8 @@
   roots.
 - Made Site evidence targets display substantive excerpts and removed the
   maintainer deployment binding from the reusable template.
+- Removed the large internal unit/release/eval test harness and generated audit
+  artifacts so the repository is centered on the shipped agent workflow.
 
 All notable changes to Epistemic Alignment are documented here.
 

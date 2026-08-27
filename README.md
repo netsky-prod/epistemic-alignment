@@ -22,9 +22,7 @@ validator.
   dependencies.
 - Portable Markdown, Gherkin, Mermaid, and ADR templates.
 - A read-only ChatGPT Sites adapter for Codex stakeholder review.
-- A complete release example under `examples/approved-project/`.
-- Human-inspectable scenarios under `evals/`; these are examples, not release
-  proof or machine certification.
+- A complete worked example under `examples/approved-project/`.
 
 ## Quick start
 
@@ -74,32 +72,6 @@ See [usage](docs/usage.md) for the phase outputs and gate protocol,
 [recovery](docs/recovery.md) for restart and stale-review handling, and the
 [trust model](docs/trust-model.md) before relying on an approval record.
 
-## Verification
-
-The plugin helper itself has no third-party runtime dependencies. The
-plugin-creator validator separately imports PyYAML, so run it from a dedicated,
-pinned validator environment. The full local release check is:
-
-```sh
-git diff --check
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-PYTHONPATH=src python3 -m unittest tests.test_release -v
-pnpm --dir adapters/codex-site/template test
-pnpm --dir examples/approved-project/alignment-review/site test
-scripts/alignment snapshot examples/approved-project --json
-scripts/alignment check examples/approved-project --json
-! rg -n "class Entity|ValidationReport|the semantic validator passed|coverage.*complete" src tests
-git status --short
-
-alignment_validator_venv="$(mktemp -d)"
-python3 -m venv "$alignment_validator_venv"
-"$alignment_validator_venv/bin/python" -m pip install \
-  --disable-pip-version-check "PyYAML==6.0.2"
-alignment_plugin_creator="${CODEX_HOME:-$HOME/.codex}/skills/.system/plugin-creator"
-"$alignment_validator_venv/bin/python" \
-  "$alignment_plugin_creator/scripts/validate_plugin.py" .
-```
-
 Publishing the review Site is optional and requires separate explicit human
 consent. This repository does not publish a Site or plugin automatically.
 
@@ -107,9 +79,8 @@ consent. This repository does not publish a Site or plugin automatically.
 
 The recommended GitHub repository name is `epistemic-alignment`, and the first
 release tag is `v0.1.0`. The manifest intentionally omits repository and
-homepage fields until an actual remote exists. Release screenshots are included
-as plugin assets and retained with their pixel metadata in
-`artifacts/release/e2e.json`.
+homepage fields until an actual remote exists. Review screenshots are included
+as plugin assets.
 
 ## Documentation
 

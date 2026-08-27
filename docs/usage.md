@@ -20,8 +20,8 @@ then resumes at the first incomplete phase. The phase outputs are:
 
 Skills ask one material question at a time and visibly distinguish facts,
 stakeholder statements, inferences, assumptions, contradictions, and open
-questions. Scenario examples in `evals/` illustrate this practice but are not
-machine assertions or release authority.
+questions. The worked project under `examples/approved-project/` demonstrates
+the resulting dossier and presentation without acting as semantic authority.
 
 ## Thin helper
 

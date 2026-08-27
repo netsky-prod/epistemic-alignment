@@ -80,15 +80,3 @@ This removes the Codex installation without deleting project dossiers or the
 local source. Keep the marketplace source until any other installed versions
 that depend on it have been removed. Never delete a project `alignment/`
 directory as part of plugin removal.
-
-## Clean-install release check
-
-`tests/test_release.py` creates a temporary marketplace with the plugin-creator
-helper, installs through `codex plugin add` into a temporary `CODEX_HOME`,
-removes the marketplace source, copies the approved dossier and Site into an
-isolated fixture, and runs snapshot, issuance, the recorded human decision,
-gate checks, and handoff through the installed helper in Codex's cache with
-`PYTHONPATH` unset. The test binds the captured command outputs to
-`artifacts/release/e2e.json`; its Cockburn, BDD, C4, review, and Site checks
-prove artifact presence and hash continuity only, not semantic correctness. It
-does not modify the personal marketplace or publish anything.

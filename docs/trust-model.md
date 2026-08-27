@@ -22,7 +22,6 @@ mechanics. This boundary is the central safety property of version 0.1.0.
 - That stakeholders reached consensus.
 - That the reviewer label is an authenticated identity or cryptographic signature.
 - That Codex intercepts every relevant prompt.
-- That the illustrative `evals/` corpus predicts or certifies agent behavior.
 
 Skills use model judgment to author and skeptically review semantics. Humans
 decide whether recorded findings are resolved or acceptable. The helper never
