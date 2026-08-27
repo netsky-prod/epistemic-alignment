@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render() {
@@ -56,4 +57,18 @@ test("renders dossier sources as evidence references instead of broken links", a
   assert.match(text, /Evidence:.*overview\.md/);
   assert.match(text, /Evidence:.*review\.md#F-01/);
   assert.doesNotMatch(html, /href="[^"]*(?:alignment\/|\.md|\.feature)/);
+});
+
+test("uses deterministic C4 caption and Mermaid render identifiers", async () => {
+  const [response, component] = await Promise.all([
+    render(),
+    readFile(new URL("../components/C4Diagram.tsx", import.meta.url), "utf8"),
+  ]);
+  const html = await response.text();
+
+  assert.match(html, /aria-labelledby="c4-diagram-caption"/);
+  assert.match(html, /figcaption id="c4-diagram-caption"/);
+  assert.match(component, /const id = "c4-diagram"/);
+  assert.match(component, /mermaid\.render\(id, source\)/);
+  assert.doesNotMatch(component, /\buseId\b/);
 });
