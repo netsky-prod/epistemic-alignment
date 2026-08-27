@@ -390,6 +390,27 @@ class ReleaseTests(unittest.TestCase):
                     screenshot_evidence["png_pixels"], {"width": width, "height": height}
                 )
 
+    def test_completion_matrix_has_only_proven_rows_and_resolving_local_links(self):
+        audit_path = ROOT / "artifacts/release/completion-audit.md"
+        audit = audit_path.read_text(encoding="utf-8")
+        rows = re.findall(
+            r"^\|[^\n]*\|\s*(proven|contradicted|missing)\s*\|[^\n]*$",
+            audit,
+            flags=re.MULTILINE,
+        )
+        self.assertGreater(len(rows), 0)
+        self.assertEqual(set(rows), {"proven"})
+
+        local_links = []
+        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", audit):
+            if "://" in target or target.startswith("#"):
+                continue
+            local_links.append(target)
+            resolved = (audit_path.parent / target.split("#", 1)[0]).resolve()
+            with self.subTest(target=target):
+                self.assertTrue(resolved.exists(), target)
+        self.assertGreater(len(local_links), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

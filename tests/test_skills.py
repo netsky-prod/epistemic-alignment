@@ -102,6 +102,42 @@ class SkillTests(unittest.TestCase):
             text,
         )
 
+    def test_approve_handoff_preserves_verified_delivery_when_superpowers_is_unavailable(self):
+        text = " ".join(
+            (ROOT / "skills/approve-handoff/SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        for requirement in [
+            "if `superpowers:brainstorming` is unavailable",
+            "leave the verified `alignment/handoff.md` and approval state untouched",
+            "delivery pending",
+            "exact `alignment/handoff.md` path",
+            "resume the transition when `superpowers:brainstorming` becomes available",
+            "do not regenerate the handoff or mutate approval state",
+        ]:
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, text)
+
+    def test_build_review_requires_working_internal_traceability_links(self):
+        text = " ".join(
+            (ROOT / "skills/build-review/SKILL.md").read_text(encoding="utf-8").split()
+        ).lower()
+        for requirement in [
+            "working internal traceability links",
+            "stable source-to-anchor mapping",
+            "rendered evidence index",
+            "every evidence href resolves",
+            "raw dossier source text visible",
+        ]:
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, text)
+
+    def test_each_skill_declares_one_input_output_boundary(self):
+        for name in EXPECTED:
+            with self.subTest(name=name):
+                text = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+                self.assertEqual(text.count("Input:"), 1)
+                self.assertEqual(text.count("Output:"), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -49,13 +49,26 @@ test("keeps findings before readiness and provides a C4 text fallback", async ()
   assert.doesNotMatch(html, /Approve dossier|Record approval/);
 });
 
-test("renders dossier sources as evidence references instead of broken links", async () => {
+test("renders dossier sources as resolvable internal evidence links", async () => {
   const response = await render();
   const html = await response.text();
   const text = html.replace(/<!--.*?-->/g, "");
 
-  assert.match(text, /Evidence:.*overview\.md/);
+  assert.match(text, /Evidence:.*charter\.md#goals/);
   assert.match(text, /Evidence:.*review\.md#F-01/);
+  const evidenceHrefs = [...html.matchAll(/class="evidence-reference"[^>]*href="#([^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.ok(evidenceHrefs.length > 0, "expected clickable evidence references");
+  const evidenceTargetIds = [...html.matchAll(/<li id="(evidence-source-[^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.equal(new Set(evidenceTargetIds).size, evidenceTargetIds.length);
+  assert.equal(new Set(evidenceHrefs).size, evidenceTargetIds.length);
+  for (const href of evidenceHrefs) {
+    assert.match(html, new RegExp(`id="${href}"`), `missing target for #${href}`);
+  }
+  for (const [, href] of html.matchAll(/href="#([^"]+)"/g)) {
+    assert.match(html, new RegExp(`id="${href}"`), `missing internal target for #${href}`);
+  }
   assert.doesNotMatch(html, /href="[^"]*(?:alignment\/|\.md|\.feature)/);
 });
 

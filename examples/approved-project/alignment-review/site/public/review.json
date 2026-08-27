@@ -6,6 +6,7 @@
   "summary": {
     "title": "Alignment review: unchanged release handoff",
     "detail": "A read-only view of release intent, evidence, uncertainty, and the human-owned approval boundary before Superpowers planning.",
+    "source": "alignment/charter.md",
     "goals": [
       {
         "id": "GOAL-001",
@@ -29,14 +30,16 @@
       "title": "Release sponsor",
       "role": "Decision authority",
       "detail": "Reviews the findings and decides on the exact issued digest.",
-      "status": "confirmed"
+      "status": "confirmed",
+      "source": "alignment/stakeholders.md#stk-001"
     },
     {
       "id": "STK-004",
       "title": "Service operator",
       "role": "Operational stakeholder",
       "detail": "Needs visible rollback ownership and risk rather than a false semantic certificate.",
-      "status": "confirmed"
+      "status": "confirmed",
+      "source": "alignment/stakeholders.md#stk-004"
     }
   ],
   "useCases": [
@@ -66,6 +69,7 @@
   ],
   "architecture": {
     "c4Source": "C4Context\ntitle Approved release handoff context\nPerson(sponsor, \"Release sponsor\", \"Decides on the exact reviewed snapshot\")\nPerson(team, \"Delivery team\", \"Authors and consumes the dossier\")\nSystem(alignment, \"Epistemic Alignment\", \"Presents evidence and protects snapshot integrity\")\nSystem_Ext(superpowers, \"Superpowers\", \"Owns implementation brainstorming and planning\")\nRel(team, alignment, \"authors and reviews\")\nRel(alignment, sponsor, \"presents findings and digest\")\nRel(sponsor, alignment, \"gives explicit decision\")\nRel(alignment, superpowers, \"hands off verified dossier\")",
+    "source": "alignment/architecture/context.md",
     "responsibilities": [
       {
         "id": "C4-001",

@@ -90,6 +90,18 @@ class SnapshotTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 create_snapshot(target)
 
+    def test_real_snapshot_path_rejects_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.copy_dossier(directory)
+            self.replace_snapshot_paths(target, ["invalid.md"])
+            (target / "invalid.md").write_bytes(b"valid prefix\n\xff\xfe")
+
+            with self.assertRaisesRegex(
+                ValueError,
+                r"snapshot path is not valid UTF-8: .*invalid\.md",
+            ):
+                create_snapshot(target)
+
     def test_cli_emits_json_snapshot(self):
         result = subprocess.run(
             [str(ROOT / "scripts/alignment"), "snapshot", "templates", "--json"],

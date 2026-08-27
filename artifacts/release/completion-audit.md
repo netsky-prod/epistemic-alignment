@@ -20,6 +20,7 @@ approval reply does not require copying a digest.
 | --- | --- | --- |
 | Installable Codex plugin manifest | proven | [manifest](../../.codex-plugin/plugin.json); `tests.test_plugin_package`; pinned plugin-creator validation command in the [README](../../README.md) |
 | Exactly eight focused skills with `alignment:align-project` as front door | proven | [skills](../../skills); `tests.test_skills.SkillTests.test_exact_skill_set`; clean-install skill inventory in `tests.test_release` |
+| Each skill has one input/output boundary and can be invoked independently | proven | Boundary regression in [skill tests](../../tests/test_skills.py) and fresh-context independent `alignment:specify-behavior` invocation in [workflow application evidence](workflow-application-evidence.md) |
 | Portable templates/references for discovery, Cockburn, BDD, C4, ADR, review, approval, and handoff | proven | [templates](../../templates/alignment), [references](../../references), and `tests.test_skills.SkillTests.test_shared_method_references_exist` |
 | Python 3.9 standard-library helper for init, snapshot, decision, stale checks, and handoff | proven | [launcher](../../scripts/alignment), [source](../../src/epistemic_alignment), [installation requirements](../../docs/installation.md), and the full Python suite |
 | Codex Sites skill and stakeholder-review template | proven | [build-review skill](../../skills/build-review/SKILL.md), [Site template](../../adapters/codex-site/template), and adapter Site suite |
@@ -41,6 +42,7 @@ approval reply does not require copying a digest.
 | --- | --- | --- |
 | Qualification for substantial, ambiguous, architectural, multi-stakeholder, or risky work | proven | [align-project](../../skills/align-project/SKILL.md) |
 | Human-forced alignment and bounded-work skip rationale without approval/handoff | proven | [align-project](../../skills/align-project/SKILL.md), [bounded-skip case](../../evals/cases/bounded-skip.md), and captured example under [runs](../evals/runs/bounded-skip) |
+| Restart after context loss resumes from files at the first incomplete phase | proven | Fresh-context file-state application in [workflow application evidence](workflow-application-evidence.md), [align-project](../../skills/align-project/SKILL.md), and resume-mapping regression in [skill tests](../../tests/test_skills.py) |
 | Discovery separates facts, statements, outcomes, constraints, inferences, assumptions, contradictions, and questions | proven | [discover-domain](../../skills/discover-domain/SKILL.md) and discovery templates under [templates](../../templates/alignment) |
 | Discovery asks one material question at a time | proven | [discover-domain](../../skills/discover-domain/SKILL.md) |
 | Cockburn use cases include the specified goal-oriented fields | proven | [Cockburn reference](../../references/cockburn.md), [write-use-cases](../../skills/write-use-cases/SKILL.md), and [approved UC-001](../../examples/approved-project/alignment/use-cases/UC-001.md) |
@@ -57,6 +59,7 @@ approval reply does not require copying a digest.
 | `rejected` closes without handoff | proven | [approval reference](../../references/approval.md), [recovery guide](../../docs/recovery.md), and gate outcome test |
 | `approved` unlocks handoff only for the unchanged reviewed snapshot | proven | [approval tests](../../tests/test_approval_gate.py), approved example gate, and [E2E evidence](e2e.json) |
 | Handoff transitions to `superpowers:brainstorming` with dossier context | proven | [approved handoff](../../examples/approved-project/alignment/handoff.md) and SHA-bound [intake evidence](superpowers-intake.md) |
+| Superpowers-unavailable delivery stays pending without approval/handoff mutation | proven | RED/GREEN fresh-context application in [workflow application evidence](workflow-application-evidence.md), conditional [approve-handoff skill](../../skills/approve-handoff/SKILL.md), and durable skill regression in [skill tests](../../tests/test_skills.py) |
 
 ## Dossier contract
 
@@ -88,6 +91,7 @@ approval reply does not require copying a digest.
 | Algorithm is `sha256-v1` over manifest-declared paths | proven | [snapshot implementation](../../src/epistemic_alignment/snapshot.py), snapshot tests, and approved snapshot command |
 | Missing, duplicate, non-file, unsafe, or escaping paths fail closed | proven | `test_unsafe_duplicate_missing_and_non_file_paths_fail_closed` and `test_symlinks_resolving_outside_dossier_fail_closed` in [snapshot tests](../../tests/test_snapshot.py) |
 | Sorted POSIX paths, UTF-8, LF normalization, and unambiguous framing are deterministic | proven | deterministic and boundary-ambiguity tests in [snapshot tests](../../tests/test_snapshot.py) |
+| Included text with invalid UTF-8 is rejected by the real snapshot path | proven | Direct production-behavior characterization `test_real_snapshot_path_rejects_invalid_utf8` in [snapshot tests](../../tests/test_snapshot.py) |
 | Included-file edits change the digest | proven | `test_included_file_change_changes_hash` in [snapshot tests](../../tests/test_snapshot.py) |
 | Review state/handoff/presentation/timestamps/renderer state/stored hashes are excluded | proven | [snapshot implementation](../../src/epistemic_alignment/snapshot.py), [artifact contract](../../references/artifact-contract.md), and snapshot-membership skill test |
 | Helper never parses or judges document semantics | proven | [thin dossier boundary](../../src/epistemic_alignment/artifacts.py), [models](../../src/epistemic_alignment/models.py), and negative audit |
@@ -114,7 +118,7 @@ approval reply does not require copying a digest.
 | 5. C4 diagrams and responsibilities | proven | `architecture` section, [C4 component](../../examples/approved-project/alignment-review/site/components/C4Diagram.tsx), and fallback rendered test |
 | 6. ADRs, assumptions, contradictions, questions, and risks | proven | `decisions`/`risks` sections in review payload and rendered Site suite |
 | 7. Findings, snapshot hash, and decision readiness | proven | `findings`/`snapshot` sections, [FindingsPanel](../../examples/approved-project/alignment-review/site/components/FindingsPanel.tsx), and finding-order rendered test |
-| Every summary retains dossier path/ID evidence references | proven | Evidence-reference rendered test and [EvidenceReference](../../adapters/codex-site/template/components/EvidenceReference.tsx) |
+| Every summary has a dossier path/ID and a working internal evidence link | proven | Resolved-href rendered tests in both Sites, payload source regression in [Codex Site tests](../../tests/test_codex_site.py), [EvidenceReference](../../adapters/codex-site/template/components/EvidenceReference.tsx), and [EvidenceIndex](../../adapters/codex-site/template/components/EvidenceIndex.tsx) |
 | Proposed/uncertain/conflicting states use visible text labels | proven | Rendered Site suite and [Site QA](../site-qa/codex-site-qa.md) |
 | No approval control or persistence exists | proven | `tests.test_codex_site`, rendered Site suite, hosting config, and [Site QA](../site-qa/codex-site-qa.md) |
 | Draft build/inspection does not publish; hosting requires explicit consent | proven | [build-review skill](../../skills/build-review/SKILL.md), [usage](../../docs/usage.md), and release evidence `publication_performed: false` |

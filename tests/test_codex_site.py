@@ -37,6 +37,20 @@ class CodexSiteTests(unittest.TestCase):
         self.assertNotIn("approveAction", data)
         self.assertNotIn("decisionMutation", data)
 
+    def test_every_summary_entry_names_a_dossier_source(self):
+        data = json.loads((SITE / "public/review.json").read_text())
+        entries = [data["project"], data["summary"], data["architecture"]]
+        for key in ["goals"]:
+            entries.extend(data["summary"][key])
+        for key in ["stakeholders", "useCases", "behavior", "decisions", "risks", "findings"]:
+            entries.extend(data[key])
+        entries.extend(data["architecture"]["responsibilities"])
+
+        for entry in entries:
+            with self.subTest(entry=entry.get("id", entry.get("name", entry.get("title")))):
+                self.assertRegex(entry.get("source", ""), r"^alignment/[^/].+")
+                self.assertNotIn("..", entry["source"])
+
 
 if __name__ == "__main__":
     unittest.main()
