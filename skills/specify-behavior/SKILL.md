@@ -9,7 +9,7 @@ Turn an agreed goal path into concrete, reviewable examples.
 
 ## Contract
 
-Input: `alignment/use-cases/`, discovery context, and confirmed or proposed criteria. Output: linked `alignment/features/*.feature` files. Read [the BDD recipe](../shared/references/bdd.md).
+Input: `alignment/use-cases/`, discovery context, and confirmed or proposed criteria. Output: linked `alignment/features/*.feature` files. Read [the BDD recipe](../../references/bdd.md).
 
 1. Inspect existing feature files and use cases; continue the first material path without an example.
 2. Choose one main success path or material extension. Ask one question only when its observable starting state or result remains unknown.

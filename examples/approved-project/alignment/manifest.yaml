@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "project": {"id": "approved-release-handoff", "title": "Approved Release Handoff"},
+  "current_phase": "approval",
+  "completed_phases": ["discover", "use-cases", "behavior", "architecture", "review", "presentation"],
+  "snapshot_paths": [
+    "charter.md",
+    "stakeholders.md",
+    "glossary.md",
+    "assumptions.md",
+    "open-questions.md",
+    "use-cases/UC-001.md",
+    "features/release-handoff.feature",
+    "architecture/context.md",
+    "architecture/containers.md",
+    "architecture/components.md",
+    "decisions/ADR-001.md",
+    "review.md"
+  ],
+  "renderer": {
+    "adapter": "codex-sites",
+    "status": "presented",
+    "location": "alignment-review/site",
+    "rendered_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "project": {
+    "name": "Approved Release Handoff",
+    "source": "alignment/manifest.yaml"
+  },
+  "summary": {
+    "title": "Alignment review: unchanged release handoff",
+    "detail": "A read-only view of release intent, evidence, uncertainty, and the human-owned approval boundary before Superpowers planning.",
+    "goals": [
+      {
+        "id": "GOAL-001",
+        "title": "Verified release intent",
+        "detail": "Expose scope, evidence, operational responsibility, and unresolved risk before implementation planning.",
+        "status": "confirmed",
+        "source": "alignment/charter.md#goals"
+      },
+      {
+        "id": "GOAL-002",
+        "title": "Human-owned decision",
+        "detail": "Only an explicit current stakeholder message can authorize the exact reviewed snapshot.",
+        "status": "proposed",
+        "source": "alignment/charter.md#goals"
+      }
+    ]
+  },
+  "stakeholders": [
+    {
+      "id": "STK-001",
+      "title": "Release sponsor",
+      "role": "Decision authority",
+      "detail": "Reviews the findings and decides on the exact issued digest.",
+      "status": "confirmed"
+    },
+    {
+      "id": "STK-004",
+      "title": "Service operator",
+      "role": "Operational stakeholder",
+      "detail": "Needs visible rollback ownership and risk rather than a false semantic certificate.",
+      "status": "confirmed"
+    }
+  ],
+  "useCases": [
+    {
+      "id": "UC-001",
+      "title": "Approve an unchanged release handoff",
+      "detail": "The sponsor reviews canonical evidence and the exact digest; only an unchanged approved snapshot reaches Superpowers.",
+      "status": "confirmed",
+      "source": "alignment/use-cases/UC-001.md"
+    }
+  ],
+  "behavior": [
+    {
+      "id": "SCN-001",
+      "title": "Explicit approval of the unchanged snapshot",
+      "detail": "Given the findings and digest are visible, a current human approval unlocks a matching handoff only while files remain unchanged.",
+      "status": "confirmed",
+      "source": "alignment/features/release-handoff.feature#SCN-001"
+    },
+    {
+      "id": "SCN-002",
+      "title": "Post-approval edit blocks handoff",
+      "detail": "Any included-file change makes the approval stale and requires a new presentation and decision.",
+      "status": "uncertain",
+      "source": "alignment/features/release-handoff.feature#SCN-002"
+    }
+  ],
+  "architecture": {
+    "c4Source": "C4Context\ntitle Approved release handoff context\nPerson(sponsor, \"Release sponsor\", \"Decides on the exact reviewed snapshot\")\nPerson(team, \"Delivery team\", \"Authors and consumes the dossier\")\nSystem(alignment, \"Epistemic Alignment\", \"Presents evidence and protects snapshot integrity\")\nSystem_Ext(superpowers, \"Superpowers\", \"Owns implementation brainstorming and planning\")\nRel(team, alignment, \"authors and reviews\")\nRel(alignment, sponsor, \"presents findings and digest\")\nRel(sponsor, alignment, \"gives explicit decision\")\nRel(alignment, superpowers, \"hands off verified dossier\")",
+    "responsibilities": [
+      {
+        "id": "C4-001",
+        "title": "Canonical dossier",
+        "detail": "Carries the human-readable source evidence and semantic review.",
+        "status": "confirmed",
+        "source": "alignment/architecture/containers.md"
+      },
+      {
+        "id": "C4-002",
+        "title": "Thin gate helper",
+        "detail": "Hashes safe included paths and enforces decision freshness without judging semantics.",
+        "status": "confirmed",
+        "source": "alignment/architecture/components.md"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "ADR-001",
+      "title": "Keep approval outside the review Site",
+      "detail": "The Site stays read-only; the host conversation is the explicit decision channel.",
+      "status": "confirmed",
+      "source": "alignment/decisions/ADR-001.md"
+    }
+  ],
+  "risks": [
+    {
+      "id": "ASM-001",
+      "title": "Local presentation availability",
+      "detail": "The sponsor is assumed able to inspect the local Site in the current interaction; publication is not required.",
+      "status": "uncertain",
+      "source": "alignment/assumptions.md#assumptions"
+    },
+    {
+      "id": "RISK-001",
+      "title": "Identity requirements may exceed v0.1.0",
+      "detail": "A regulated workflow would conflict with relying on an unauthenticated descriptive reviewer label.",
+      "status": "conflicting",
+      "source": "alignment/review.md#finding-001--reviewer-label-is-not-authenticated"
+    }
+  ],
+  "findings": [
+    {
+      "id": "FINDING-001",
+      "title": "Reviewer label is not authenticated",
+      "detail": "The stakeholder must acknowledge this accepted limitation; regulated or quorum-based work needs an external identity/signature system.",
+      "status": "uncertain",
+      "source": "alignment/review.md#finding-001--reviewer-label-is-not-authenticated"
+    }
+  ],
+  "snapshot": {
+    "algorithm": "sha256-v1",
+    "digest": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+    "status": "awaiting human decision",
+    "paths": [
+      "architecture/components.md",
+      "architecture/containers.md",
+      "architecture/context.md",
+      "assumptions.md",
+      "charter.md",
+      "decisions/ADR-001.md",
+      "features/release-handoff.feature",
+      "glossary.md",
+      "open-questions.md",
+      "review.md",
+      "stakeholders.md",
+      "use-cases/UC-001.md"
+    ]
+  }
+}

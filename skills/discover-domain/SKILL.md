@@ -9,7 +9,7 @@ Build a reviewable account of what is known, claimed, inferred, and unknown.
 
 ## Contract
 
-Input: initialized `alignment/` dossier, repository evidence, approved sources, and human answers. Output: updated discovery files that identify their provenance and uncertainty. Read [the dossier contract](../shared/references/artifact-contract.md).
+Input: initialized `alignment/` dossier, repository evidence, approved sources, and human answers. Output: updated discovery files that identify their provenance and uncertainty. Read [the dossier contract](../../references/artifact-contract.md).
 
 1. Inspect `charter.md`, `stakeholders.md`, `glossary.md`, `assumptions.md`, and `open-questions.md`; resume the first incomplete category.
 2. Inspect relevant repository evidence without converting implementation details into stakeholder intent.

@@ -5,7 +5,7 @@ description: Use when a reviewed alignment dossier needs a stakeholder-facing pr
 
 # Build Review
 
-Render a derived review surface while keeping dossier files canonical. Read [platform detection](../shared/references/platform-detection.md) and [thin approval](../shared/references/approval.md).
+Render a derived review surface while keeping dossier files canonical. Read [platform detection](../../references/platform-detection.md) and [thin approval](../../references/approval.md).
 
 ## Contract
 

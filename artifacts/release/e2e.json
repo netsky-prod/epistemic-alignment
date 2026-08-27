@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "status": "complete",
+  "plugin_version": "0.1.0",
+  "clean_install": {
+    "isolated_codex_home": true,
+    "temporary_marketplace_generated_by_plugin_creator": true,
+    "installed_via_codex_plugin_add": true,
+    "marketplace_source_removed_before_helper_execution": true,
+    "source_tree_pythonpath_used": false,
+    "installed_skill_count": 8,
+    "verification": "python3 -m unittest tests.test_release.ReleaseTests.test_clean_install_uses_packaged_plugin_in_isolated_codex_home -v"
+  },
+  "site_presented": true,
+  "site_location": "examples/approved-project/alignment-review/site",
+  "site_test": "pnpm --dir examples/approved-project/alignment-review/site test",
+  "visual_qa": {
+    "desktop": "artifacts/release/site-desktop.png",
+    "desktop_viewport": "1440x1000",
+    "narrow": "artifacts/release/site-narrow.png",
+    "narrow_viewport": "390x844"
+  },
+  "human_approved": true,
+  "decision": {
+    "value": "approved",
+    "reviewer": "human stakeholder",
+    "provenance": "human-message",
+    "acknowledged_findings": [
+      "FINDING-001"
+    ]
+  },
+  "issued_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+  "rendered_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+  "approved_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+  "handoff_hash": "6394fafad6f9316d0082e6491c3626b52976780600323b90ec21bb3e19d07077",
+  "gate_ready": true,
+  "superpowers_handoff_consumed": true,
+  "superpowers_consumption": {
+    "skill": "superpowers:brainstorming",
+    "required_context": [
+      "examples/approved-project/alignment/handoff.md",
+      "examples/approved-project/alignment/"
+    ],
+    "classification": "architectural",
+    "scope": "intake only; no downstream implementation was performed"
+  },
+  "semantic_validator_present": false,
+  "publication_performed": false,
+  "notes": [
+    "The Site payload, issued review, desktop capture, and narrow capture represent the same current snapshot.",
+    "The human stakeholder explicitly approved the current issued digest and acknowledged FINDING-001 in the host conversation.",
+    "The helper generated the handoff after a ready check, and Superpowers brainstorming consumed it with the dossier as required context."
+  ]
+}

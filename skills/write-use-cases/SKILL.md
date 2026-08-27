@@ -9,7 +9,7 @@ Express a stakeholder goal as responsibilities, guarantees, and recoverable path
 
 ## Contract
 
-Input: discovery dossier files and material stakeholder goals. Output: `alignment/use-cases/UC-*.md` files linked to their discovery evidence. Read [the Cockburn recipe](../shared/references/cockburn.md) and [dossier contract](../shared/references/artifact-contract.md).
+Input: discovery dossier files and material stakeholder goals. Output: `alignment/use-cases/UC-*.md` files linked to their discovery evidence. Read [the Cockburn recipe](../../references/cockburn.md) and [dossier contract](../../references/artifact-contract.md).
 
 1. Read existing discovery and use-case files. Continue an incomplete use case before creating another.
 2. Select one material actor goal. If its intent, guarantee, or conflict is unclear, ask one material question and record the answer in discovery first.

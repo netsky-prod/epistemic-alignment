@@ -9,7 +9,7 @@ Explain how responsibilities support required behavior and where choices carry c
 
 ## Contract
 
-Input: discovery, use cases, behavior examples, and relevant repository facts. Output: C4 Markdown views under `alignment/architecture/` and material `alignment/decisions/ADR-*.md`. Read [the C4 and ADR recipe](../shared/references/c4.md).
+Input: discovery, use cases, behavior examples, and relevant repository facts. Output: C4 Markdown views under `alignment/architecture/` and material `alignment/decisions/ADR-*.md`. Read [the C4 and ADR recipe](../../references/c4.md).
 
 1. Inspect existing architecture views, ADRs, use cases, and scenarios; resume the first behavior whose responsibility has no explanation.
 2. Write system context for a software system. Add containers when deployables or stores matter; add components only where internal structure affects material behavior or a decision.

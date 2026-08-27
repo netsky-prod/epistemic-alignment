@@ -164,7 +164,7 @@ These are review findings, not compiler diagnostics. The agent records them in t
 
 ### 6.7 Presentation and decision
 
-The renderer presents both understanding and uncertainty. The stakeholder responds `approved`, `changes_requested`, or `rejected` in the host conversation. Only an explicit human message in the current interaction can be transcribed as approval.
+The renderer presents both understanding and uncertainty. The stakeholder responds `approved`, `changes_requested`, or `rejected` in the host conversation. The stakeholder does not need to repeat or copy the digest; the agent binds that explicit current reply internally to the current issued digest when invoking the helper CLI. Only an explicit human message in the current interaction can be transcribed as approval, and it must never be bound to a superseded issuance.
 
 `changes_requested` returns to the relevant phase. `rejected` closes the attempt without a handoff. `approved` unlocks a handoff only while the reviewed snapshot remains current.
 

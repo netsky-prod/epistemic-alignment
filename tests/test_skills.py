@@ -36,12 +36,12 @@ class SkillTests(unittest.TestCase):
             self.assertIn(phrase, text)
 
     def test_shared_method_references_exist(self):
-        references = ROOT / "skills/shared/references"
+        references = ROOT / "references"
         for name in ["artifact-contract", "cockburn", "bdd", "c4", "semantic-review", "approval", "platform-detection"]:
             self.assertTrue((references / f"{name}.md").is_file(), name)
 
     def test_reviewable_artifacts_sync_snapshot_membership_at_every_stage(self):
-        contract = (ROOT / "skills/shared/references/artifact-contract.md").read_text(encoding="utf-8")
+        contract = (ROOT / "references/artifact-contract.md").read_text(encoding="utf-8")
         for phrase in [
             "mandatory snapshot membership invariant",
             "snapshot_paths",
@@ -79,7 +79,7 @@ class SkillTests(unittest.TestCase):
         self.assertNotIn("Next transition: `alignment:discover-domain`", text)
 
     def test_approval_reference_uses_exact_cli_argument_order(self):
-        text = (ROOT / "skills/shared/references/approval.md").read_text(encoding="utf-8")
+        text = (ROOT / "references/approval.md").read_text(encoding="utf-8")
         self.assertIn(
             "scripts/alignment decide <root> --decision approved --reviewer <label> --provenance human-message --review-hash <hash> --acknowledged-finding ID",
             text,

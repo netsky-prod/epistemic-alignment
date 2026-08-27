@@ -27,6 +27,7 @@
 - The helper may initialize files, verify manifest/path safety, hash snapshots, record explicit decisions, detect stale approval, and create handoff only.
 - No `Entity` model, document-front-matter parser, ID graph, semantic diagnostic, or machine coverage calculation may remain.
 - Approval requires an explicit current-interaction human message; the helper verifies `human-message` provenance but does not claim authenticated identity.
+- After presentation, a simple explicit `approved`, `changes_requested`, or `rejected` reply is sufficient; the agent binds it internally to the current issued digest, so the human never has to copy or repeat hashes. The helper CLI remains unchanged.
 - Issued, rendered, approved, and current `sha256-v1` hashes must match before handoff.
 - Publishing or updating a Site requires explicit human consent; draft build and local/ChatGPT inspection do not.
 - Codex v1 ships production skills and Site behavior; Claude, OpenCode, and Qwen Code receive a concrete adapter contract and road maps.
@@ -420,7 +421,7 @@ Expected: failures for missing skill directories.
 
 Every skill has trigger-focused front matter, exact inputs/outputs, one-question-at-a-time interaction where appropriate, restart behavior based on files, forbidden behaviors, and one next transition. Cockburn/BDD/C4 references contain the agreed human-readable templates. Semantic review explicitly looks for unsupported goals, missing examples, unexplained responsibilities, consequences, contradictions, hidden assumptions, and critical unknowns, then writes findings rather than a pass certificate.
 
-`approve-handoff` shows the Site reference, `review.md`, findings, and snapshot hash to the human; only after a current explicit decision does it call `decide` and `handoff`. Silence, generic prior permission, a Site button, agent confidence, or a pre-edited state file never count as approval.
+`approve-handoff` shows the Site reference, `review.md`, findings, and snapshot hash to the human; only after a current explicit decision does it bind that simple reply internally to the current issued digest and call `decide` and `handoff`. The human does not copy or repeat hashes. Silence, generic prior permission, a Site button, agent confidence, or a pre-edited state file never count as approval.
 
 - [ ] **Step 4: Run skill tests and reference audit**
 

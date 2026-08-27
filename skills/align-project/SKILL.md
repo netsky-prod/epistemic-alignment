@@ -9,7 +9,7 @@ Create or resume the dossier; the files, not conversation memory, define progres
 
 ## Contract
 
-Input: project root and the human's request. Output: either a recorded skip rationale or an initialized/resumed `alignment/` dossier with its next phase identified. Read [the dossier contract](../shared/references/artifact-contract.md).
+Input: project root and the human's request. Output: either a recorded skip rationale or an initialized/resumed `alignment/` dossier with its next phase identified. Read [the dossier contract](../../references/artifact-contract.md).
 
 1. Inspect `alignment/manifest.yaml` if it exists. Otherwise qualify the request: use alignment for substantial scope, ambiguity, architectural/public-interface change, multiple stakeholders, or material risk. For bounded work, record a short rationale in `charter.md` and produce neither approval nor handoff.
 2. Initialize an absent dossier with `scripts/alignment init <root> --project-id <id> --title <title>`.

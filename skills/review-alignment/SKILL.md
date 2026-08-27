@@ -9,7 +9,7 @@ Use human judgment to make semantic gaps visible for stakeholder decision.
 
 ## Contract
 
-Input: the complete current `alignment/` dossier. Output: `alignment/review.md` containing evidence-backed, human-readable findings and dispositions. Read [the semantic-review record](../shared/references/semantic-review.md).
+Input: the complete current `alignment/` dossier. Output: `alignment/review.md` containing evidence-backed, human-readable findings and dispositions. Read [the semantic-review record](../../references/semantic-review.md).
 
 1. Read the dossier afresh: discovery, use cases, features, architecture, ADRs, and existing `review.md`. Resume by updating stale or undispositioned findings.
 2. Look for unsupported goals, important paths without concrete examples, unexplained responsibilities, decisions without consequences, contradictions, hidden assumptions, and critical unknowns.
