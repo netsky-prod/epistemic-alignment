@@ -272,6 +272,13 @@ def check_gate(alignment_dir: Path) -> GateResult:
     except ValueError:
         return GateResult(ready=False, reasons=["snapshot-invalid"], digest="")
 
+    if os.path.lexists(str(_handoff_backup_path(alignment_dir))):
+        return GateResult(
+            ready=False,
+            reasons=["handoff-transaction-unresolved"],
+            digest=current.digest,
+        )
+
     if not _review_is_snapshotted(current):
         return GateResult(ready=False, reasons=["review-not-snapshotted"], digest=current.digest)
 
@@ -297,4 +304,20 @@ def check_gate(alignment_dir: Path) -> GateResult:
         issued == rendered == decision.get("review_hash") == current.digest
     ):
         reasons.append("hash-mismatch")
+    handoff = state["handoff"]
+    if handoff:
+        handoff_path = _handoff_path(alignment_dir)
+        if not handoff_path.is_file():
+            reasons.append("handoff-file-missing")
+        else:
+            try:
+                content = handoff_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                reasons.append("handoff-digest-mismatch")
+            else:
+                if (
+                    handoff["digest"] != current.digest
+                    or "sha256-v1:" + handoff["digest"] not in content
+                ):
+                    reasons.append("handoff-digest-mismatch")
     return GateResult(ready=not reasons, reasons=reasons, digest=current.digest)

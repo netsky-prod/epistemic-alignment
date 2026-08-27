@@ -345,6 +345,60 @@ class ApprovalGateTests(unittest.TestCase):
             self.assertEqual(self.state(target), old_state)
             self.assert_no_handoff_transition_artifacts(target)
 
+    def test_unrestored_handoff_backup_fails_closed_and_blocks_new_handoff(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            write_handoff(target)
+
+            with mock.patch.object(
+                approval_module,
+                "_write_state",
+                side_effect=OSError("injected state write failure"),
+            ), mock.patch.object(
+                approval_module,
+                "_restore_handoff",
+                side_effect=OSError("injected rollback failure"),
+            ):
+                with self.assertRaises(OSError):
+                    record_decision(
+                        target,
+                        "changes_requested",
+                        "owner",
+                        "human-message",
+                        self.state(target)["snapshot"]["digest"],
+                        ["F-1"],
+                    )
+
+            self.assertTrue((target / ".handoff-backup").exists())
+            self.assertFalse((target / "handoff.md").exists())
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertIn("handoff-transaction-unresolved", gate.reasons)
+            with self.assertRaises(ValueError):
+                write_handoff(target)
+            self.assertTrue((target / ".handoff-backup").exists())
+
+    def test_verified_handoff_state_requires_the_handoff_file_and_digest_binding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = self.dossier(directory)
+            self.approve(target)
+            handoff = write_handoff(target)
+            digest = self.state(target)["handoff"]["digest"]
+
+            handoff.unlink()
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertIn("handoff-file-missing", gate.reasons)
+            with self.assertRaises(ValueError):
+                write_handoff(target)
+
+            handoff.write_text("wrong handoff", encoding="utf-8")
+            gate = check_gate(target)
+            self.assertFalse(gate.ready)
+            self.assertIn("handoff-digest-mismatch", gate.reasons)
+            self.assertNotIn("sha256-v1:" + digest, handoff.read_text(encoding="utf-8"))
+
     def test_state_updates_preserve_unrelated_sections_and_clear_old_handoff(self):
         with tempfile.TemporaryDirectory() as directory:
             target = self.dossier(directory)
