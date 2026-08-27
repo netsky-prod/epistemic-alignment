@@ -530,23 +530,35 @@ git commit -m "feat: present alignment dossiers with ChatGPT Sites"
 - Create: `adapters/{claude,opencode,qwen-code}.md`
 - Create: `evals/README.md`
 - Create: `evals/cases/{greenfield,existing-repo,conflict,critical-unknown,bounded-skip,stale-approval,self-approval}.md`
-- Create: `artifacts/evals/runs/**`
+- Create: `artifacts/evals/runs/**` for the five captured semantic runs
 
 **Interfaces:**
 - Consumes: installed skills, helper commands, and Sites adapter.
-- Produces: seven illustrative, manually inspectable scenario examples; adapter input/output contract; concrete host road maps.
+- Produces: seven illustrative, manually inspectable scenario examples (five
+  captured semantic runs and two case-only deterministic helper walkthroughs);
+  adapter input/output contract; concrete host road maps.
 
 - [ ] **Step 1: Author scenario examples and adapter docs**
 
-Each case includes a starting prompt, available evidence, scripted human answers, expected dossier/Site behavior, forbidden claims, and a recorded gate outcome. Conflict and critical-unknown cases preserve findings rather than claim machine invalidity; stale/self-approval cases show the thin-gate outcome. The adapter contract takes dossier path, snapshot paths/hash, semantic review, and host capabilities and returns adapter/version/location/status/rendered hash/warnings. Claude uses an Artifact; OpenCode and Qwen Code use a shared local static renderer with separate extension metadata and preview instructions.
+Each case includes a starting prompt, available evidence, scripted human answers, expected dossier/Site behavior, forbidden claims, and a recorded or described gate outcome. Conflict and critical-unknown cases preserve findings rather than claim machine invalidity; stale/self-approval cases show the thin-gate outcome. The adapter contract takes dossier path, snapshot paths/hash, semantic review, and host capabilities and returns adapter/version/location/status/rendered hash/warnings. Claude uses an Artifact; OpenCode and Qwen Code use a shared local static renderer with separate extension metadata and preview instructions.
 
 - [ ] **Step 2: Record illustrative runs**
 
-Install the development plugin and run each case in an isolated fixture. Capture dossier files, Site reference where applicable, transcript excerpts needed to explain human interaction, and the gate outcome. Keep the case Markdown and captured run directories as non-authoritative human examples; do not add a checker, machine assertions, release gate, or source-presence test for them.
+Install the development plugin and run the five semantic cases in isolated
+fixtures. Capture dossier files, Site reference where applicable, transcript
+excerpts needed to explain human interaction, and the gate outcome under
+`artifacts/evals/runs/`. Keep `stale-approval.md` and `self-approval.md` as
+case-only deterministic helper walkthroughs without captured run directories.
+Keep all case Markdown and captured runs as non-authoritative human examples;
+do not add a checker, machine assertions, release gate, or source-presence test
+for them.
 
 - [ ] **Step 3: Manually inspect examples and run product verification**
 
-Review the cases and captured runs as human examples. Run the product test suite and the deterministic helper commands relevant to current release work; do not treat the scenario corpus as machine proof.
+Review the seven cases and five captured runs as human examples, including the
+two case-only helper walkthroughs. Run the product test suite and the
+deterministic helper commands relevant to current release work; do not treat
+the scenario corpus as machine proof.
 
 - [ ] **Step 4: Commit examples and adapter contract**
 
