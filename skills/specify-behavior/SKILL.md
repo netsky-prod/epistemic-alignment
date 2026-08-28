@@ -105,6 +105,6 @@ Read scenarios aloud as business examples. Confirm:
 - architecture has not leaked into acceptance language;
 - IDs and source links are stable.
 
-When examples expose the architecture-driving responsibilities, add `behavior` to `completed_phases`, set `current_phase` to `architecture`, and synchronize feature paths in `snapshot_paths`.
+When examples expose the architecture-driving responsibilities, add `behavior` to `completed_phases` and set `current_phase` to the next material phase. Synchronize feature paths in `snapshot_paths` only in exact-snapshot mode.
 
 Next transition: `alignment:model-architecture`.

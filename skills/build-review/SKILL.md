@@ -9,9 +9,9 @@ Turn the canonical dossier into a decision-quality stakeholder review. The prese
 
 ## Contract
 
-Input: current dossier, `review.md`, manifest, snapshot, target host capabilities, and any existing presentation.
+Input: current dossier, `review.md`, process contract, target host capabilities, and any existing presentation.
 
-Output: a read-only draft presentation, its location, an issued review snapshot, and one clear request for stakeholder review.
+Output: a read-only draft presentation, its location, the selected review-binding state, and one clear request for stakeholder review.
 
 Use [installed resources](../../references/installed-resources.md), [platform detection](../../references/platform-detection.md), [presentation method](../../references/presentation.md), and [thin approval](../../references/approval.md).
 
@@ -20,8 +20,8 @@ Resolve the bundled Site template from `$ALIGNMENT_PLUGIN_ROOT/adapters/codex-si
 ## Preconditions
 
 1. Read the complete dossier and `review.md` semantically.
-2. Verify that every human-authored reviewable dossier file is in `snapshot_paths`.
-3. Rebuild when source files, findings, or current snapshot differ from the existing presentation.
+2. In exact-snapshot mode, verify every human-authored reviewable dossier file is in `snapshot_paths`.
+3. Rebuild when source files, findings, process contract, or represented review version differ from the existing presentation.
 4. Do not hide open findings to make the presentation appear ready.
 
 If open blocking findings prevent meaningful review, present them explicitly and ask whether the stakeholder wants revision before issuance. A review Site may show unreadiness; it must not fabricate readiness.
@@ -58,6 +58,7 @@ On Codex with Sites:
 
 1. Copy the unbound bundled template to `$PROJECT_ROOT/alignment-review/site/`. Do not copy a maintainer deployment `project_id`.
 2. Populate `public/review.json` with exactly these top-level keys: `project`, `summary`, `stakeholders`, `useCases`, `behavior`, `architecture`, `decisions`, `risks`, `findings`, and `snapshot`.
+   In conversational mode, `snapshot` reports the binding mode, represented source paths, and `not exact-byte bound`; it must not invent a digest. Exact algorithm/digest fields appear only in exact-snapshot mode.
 3. Put the evidence index beneath an existing nested key, preserving the ten-key contract. Include a substantive excerpt for every referenced source.
 4. Render seven anchored views: summary, stakeholders, use cases, behavior, architecture, decisions-and-risks, and review-readiness.
 5. Label proposed, uncertain, assumed, open, accepted, and conflicting material in visible text—not color alone.
@@ -76,24 +77,28 @@ Inspect content and presentation at desktop and narrow widths. Check:
 - every evidence reference reaches substantive content;
 - no dossier path or user content became unsafe executable markup;
 - findings and uncertainty are not visually minimized;
-- the snapshot displayed is the current snapshot of the rendered source dossier.
+- the displayed review-binding mode and version evidence honestly match the represented source dossier.
 
 Do not publish or update a hosted Site without separate explicit human consent. Local build/preview and private draft inspection are not approval.
 
-## Issue the review
+## Present the review
 
-After the draft is exact, run through the resolved bundled helper:
+In conversational mode, do not issue a hash merely because the helper exists. Record the presentation adapter/location in the manifest, label the view `conversational review — not exact-byte bound`, and proceed to the human decision request.
+
+Only in exact-snapshot mode, run through the resolved bundled helper:
 
 ```sh
 "$ALIGNMENT_HELPER" snapshot "$PROJECT_ROOT" --json
 "$ALIGNMENT_HELPER" issue-review "$PROJECT_ROOT" --adapter <adapter> --status presented --location <reference>
 ```
 
-The displayed digest must equal the issued/current digest, but the human never needs to copy it. Add `presentation` to `completed_phases`, set `current_phase` to `approval`, and show the stakeholder:
+In exact-snapshot mode the displayed digest must equal the issued/current digest, but the human never needs to copy it. In either mode add `presentation` to `completed_phases`, set `current_phase` to `approval`, and show the stakeholder:
 
 - presentation location;
 - open/material findings and accepted limitations;
 - a short statement of what approval means;
+- the selected binding mode and why it is sufficient;
+- the recommended downstream rigor and gates intentionally omitted;
 - an invitation to inspect and request changes.
 
 A Site view, positive reaction, prior design permission, or absence of objections is not approval.

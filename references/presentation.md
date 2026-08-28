@@ -11,7 +11,7 @@ A review surface is successful when a stakeholder can form an accurate mental mo
 5. C4 responsibilities and material ADRs.
 6. Risks, assumptions, contradictions, and open questions.
 7. Independent findings and their dispositions.
-8. Snapshot readiness and the precise approval boundary.
+8. Review-binding mode, downstream-rigor recommendation, and the precise approval boundary.
 
 ## Evidence entry
 
@@ -33,5 +33,6 @@ An evidence link that only repeats its source label is insufficient. The target 
 - Pair diagrams with text and responsibility tables.
 - Separate accepted limitations from resolved findings.
 - State what approval unlocks and what remains undecided.
+- Show which downstream gates are recommended or omitted and the risks that justify that choice.
 - Optimize for stakeholder comprehension, not dossier completeness on one screen.
 - Keep the surface read-only; decisions stay in the human conversation.

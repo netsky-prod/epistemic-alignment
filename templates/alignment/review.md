@@ -2,7 +2,7 @@
 
 ## Review scope and limits
 
-- Snapshot:
+- Review binding (`conversational` or `exact-snapshot`) and reviewed version:
 - Files and evidence inspected:
 - Stakeholder perspectives represented:
 - Unavailable evidence / missing perspectives:

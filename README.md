@@ -4,25 +4,26 @@ Epistemic Alignment is a Codex plugin for reaching a shared, inspectable
 understanding of a complex software initiative before implementation planning.
 It guides discovery, Cockburn use cases, BDD examples, C4 architecture, ADRs,
 semantic review, a stakeholder-facing review Site, explicit human approval,
-and a hash-verified handoff to Superpowers.
+and a risk-calibrated handoff to Superpowers.
 
 The product is the agent workflow: eight substantial skills guide inquiry,
 goal modeling, examples, responsibility design, independent review, and a
-human decision. A thin dependency-free Python helper only initializes files,
-binds the reviewed snapshot to the current decision, rejects stale approval,
-and writes the handoff. It is not a requirements compiler or semantic
-validator.
+human decision. The workflow records which phases and gates are justified,
+which are intentionally omitted, and how much downstream process is warranted.
+A thin dependency-free Python helper is available when exact-snapshot binding
+is materially required; ordinary review uses conversational approval without a
+hash ceremony. The helper is not a requirements compiler or semantic validator.
 
 ## What is included
 
 - Eight `alignment:*` skills, with `alignment:align-project` as the front door.
 - Deep Cockburn, BDD, C4/ADR, epistemic-discovery, semantic-review, and
   stakeholder-presentation methods.
-- A Python 3.9-compatible `scripts/alignment` helper with no third-party runtime
-  dependencies.
+- An optional Python 3.9-compatible exact-snapshot helper with no third-party
+  runtime dependencies.
 - Portable Markdown, Gherkin, Mermaid, and ADR templates.
 - A read-only ChatGPT Sites adapter for Codex stakeholder review.
-- A complete worked example under `examples/approved-project/`.
+- A complete worked exact-snapshot example under `examples/approved-project/`.
 
 ## Quick start
 
@@ -35,8 +36,8 @@ start a new Codex task, and ask:
 The normal flow is:
 
 ```text
-qualify -> discover -> use cases -> behavior -> architecture
-        -> semantic review -> presentation -> human decision -> handoff
+calibrate -> only material alignment phases -> presentation
+          -> human decision -> handoff with downstream rigor
         -> superpowers:brainstorming
 ```
 
@@ -44,15 +45,15 @@ Canonical project documents live in `alignment/`. The generated review project
 lives in `alignment-review/site/`. Approval happens only in the host
 conversation; the Site has no approval button or persistence. After the Site,
 the stakeholder can reply simply `approved`, `changes_requested`, or
-`rejected`; the agent binds that reply to the current issued digest internally.
+`rejected`. Conversational binding is the default; an issued digest is used
+only when the process contract names a real exact-version requirement.
 
-## How installed skills use the helper
+## Optional exact-snapshot helper
 
-Skills resolve the helper and Site template relative to their installed plugin
-path. They do not expect the target repository to contain this plugin's
-`scripts/` or `adapters/` directories. The commands below are the underlying
-interface; normal users interact with the agent and reply to the review in
-plain language.
+Skills resolve bundled resources relative to their installed plugin path. They
+do not expect the target repository to contain this plugin's `scripts/` or
+`adapters/` directories. The commands below are used only by exact-snapshot
+mode; normal users interact with the agent in plain language.
 
 ## Helper commands
 
@@ -68,7 +69,8 @@ scripts/alignment check <project-root> --json
 scripts/alignment handoff <project-root>
 ```
 
-See [usage](docs/usage.md) for the phase outputs and gate protocol,
+See [usage](docs/usage.md) for process calibration, phase outputs, and both
+decision modes,
 [recovery](docs/recovery.md) for restart and stale-review handling, and the
 [trust model](docs/trust-model.md) before relying on an approval record.
 

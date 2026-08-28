@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Epistemic Alignment",
     "shortDescription": "Create an approved, traceable project understanding.",
-    "longDescription": "Guides agents and stakeholders through epistemic discovery, Cockburn use cases, BDD examples, C4 and ADRs, independent review, a read-only decision surface, and an explicit human-gated Superpowers handoff.",
+    "longDescription": "Guides agents and stakeholders through risk-calibrated discovery, Cockburn use cases, BDD examples, C4 and ADRs, independent review, a read-only decision surface, and an explicit human-gated Superpowers handoff without automatic process ceremony.",
     "developerName": "Epistemic Alignment contributors",
     "category": "Productivity",
     "capabilities": [

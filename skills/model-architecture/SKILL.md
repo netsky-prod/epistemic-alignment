@@ -108,6 +108,6 @@ Before transition confirm:
 
 Use Mermaid source plus prose/table fallback so the model remains reviewable without rendering. Update prior artifacts if architecture analysis exposes a behavior or goal contradiction.
 
-When architecture-driving behavior is explained and material decisions are either explicit or visibly open, add `architecture` to `completed_phases`, set `current_phase` to `review`, and synchronize architecture and ADR paths in `snapshot_paths`.
+When architecture-driving behavior is explained and material decisions are either explicit or visibly open, add `architecture` to `completed_phases` and set `current_phase` to the next material phase. Synchronize architecture and ADR paths in `snapshot_paths` only in exact-snapshot mode.
 
 Next transition: `alignment:review-alignment`.

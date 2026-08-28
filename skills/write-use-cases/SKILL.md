@@ -97,6 +97,6 @@ Read each case from the perspectives of primary actor, operator, and failure-aff
 
 Ask one material question when intent, guarantee, or conflict is unclear, and update discovery before revising the case.
 
-When priority user goals and material extensions are reviewable, add `use-cases` to `completed_phases`, set `current_phase` to `behavior`, and synchronize all use-case paths in `snapshot_paths`.
+When priority user goals and material extensions are reviewable, add `use-cases` to `completed_phases` and set `current_phase` to the next material phase. Synchronize all use-case paths in `snapshot_paths` only in exact-snapshot mode.
 
 Next transition: `alignment:specify-behavior`.

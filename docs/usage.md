@@ -1,114 +1,67 @@
 # Usage
 
-## Start or resume
+## Start with calibration
 
-Invoke `alignment:align-project` for a new product, public-interface or
-architecture change, ambiguous requirement, multi-stakeholder effort, or work
-with material risk. A human may force the full process. A bounded task may skip
-only with a written rationale; a skip creates neither approval nor handoff.
+Invoke `alignment:align-project` for ambiguous, architecture-changing, stakeholder-heavy, or materially risky work. Before creating a dossier, the skill states a process contract:
 
-The front-door skill inspects `alignment/manifest.yaml` and existing artifacts,
-then resumes at the first incomplete phase. The phase outputs are:
+- desired deliverables;
+- actual material risks and failure stakes;
+- reversibility and external effects;
+- phases and gates retained or omitted;
+- conversational or exact-snapshot review binding;
+- recommended downstream rigor: direct, bounded, full, or critical.
+
+Genuinely clear bounded work proceeds directly without dossier or handoff. Aligned work creates only artifacts that resolve a named material question or risk. The available methods are:
 
 1. discovery: charter, stakeholders, glossary, assumptions, and open questions;
-2. use cases: Cockburn-style `alignment/use-cases/UC-*.md`;
-3. behavior: observable `alignment/features/*.feature` examples;
-4. architecture: C4 Markdown/Mermaid and `alignment/decisions/ADR-*.md`;
-5. semantic review: human-readable findings in `alignment/review.md`;
-6. presentation: a derived, read-only `alignment-review/site/`;
-7. decision and handoff: exact-snapshot approval and `alignment/handoff.md`.
+2. Cockburn use cases when actor goals/interactions matter;
+3. BDD examples when observable boundaries or guarantees matter;
+4. C4/ADRs when responsibilities, interfaces, or choices matter;
+5. semantic review when cross-artifact coherence is a material risk;
+6. a read-only stakeholder presentation when a human decision is needed;
+7. explicit decision and handoff.
 
-Skills ask one material question at a time and visibly distinguish facts,
-stakeholder statements, inferences, assumptions, contradictions, and open
-questions. The worked project under `examples/approved-project/` demonstrates
-the resulting dossier and presentation without acting as semantic authority.
+Before another phase or review cycle, the agent names what it will decide or de-risk. Unsupported phases are recorded `not needed`; two cycles with no new material information trigger recalibration.
 
-## Thin helper
+## Human review
 
-The agent resolves the launcher from the active installed skill, not from the
-target repository. Conceptually:
+The review surface shows the proposed understanding, evidence, uncertainty, contradictions, findings, binding mode, and downstream-rigor recommendation. The stakeholder replies naturally with `approved`, `changes_requested`, or `rejected`. A Site interaction, silence, old permission, agent confidence, or a test fixture is not approval.
+
+### Conversational binding — default
+
+Use for continuous human review where exact-byte provenance is not materially required. On approval the agent writes `alignment/handoff.md` with the presentation reference, reviewed source paths, current-message provenance, accepted findings, remaining uncertainty, and downstream-rigor recommendation. It explicitly says `not exact-byte bound`.
+
+A material source/finding change before delivery requires re-presentation and a new decision. The agent does not claim cryptographic freshness in this mode.
+
+### Exact-snapshot binding — opt in
+
+Use only when the human requests version-bound approval, regulated/audited evidence needs it, asynchronous or multi-writer review creates material stale-version risk, or downstream action is difficult to reverse.
+
+The installed helper is resolved from the plugin root:
 
 ```sh
 ALIGNMENT_PLUGIN_ROOT=<resolved installed plugin root>
 ALIGNMENT_HELPER="$ALIGNMENT_PLUGIN_ROOT/scripts/alignment"
 PROJECT_ROOT=<absolute target project root>
-"$ALIGNMENT_HELPER" --version
-```
 
-Initialize once:
-
-```sh
-"$ALIGNMENT_HELPER" init "$PROJECT_ROOT" --project-id <id> --title <title>
-```
-
-The initializer exits `0` on success and refuses to overwrite an existing
-dossier with exit `2`. Author the dossier through the skills, then inspect the
-current mechanical snapshot:
-
-```sh
 "$ALIGNMENT_HELPER" snapshot "$PROJECT_ROOT" --json
-```
-
-Snapshot returns `0` and an `algorithm`, `digest`, and sorted `paths` array. An
-unsafe, duplicate, missing, non-file, escaping, or invalid UTF-8 included path
-returns exit `2`. The helper normalizes text line endings; it does not judge the
-meaning or completeness of any document.
-
-## Present and decide
-
-`alignment:build-review` copies the Codex Site template, replaces
-`public/review.json` from the dossier, builds and inspects it, and checks that
-the displayed hash equals the current snapshot. Draft generation and visual
-inspection do not publish. Publishing or updating requires separate explicit
-human consent.
-
-Once the stakeholder has actually seen the review, issue it:
-
-```sh
 "$ALIGNMENT_HELPER" issue-review "$PROJECT_ROOT" \
   --adapter codex-sites --status presented --location alignment-review/site
-```
-
-Show the location, `review.md` findings, and exact issued digest. In the same
-interaction ask for exactly one current decision: `approved`,
-`changes_requested`, or `rejected`. The human does not need to repeat or copy
-the digest; the agent binds that reply internally to the current issued digest.
-Only then may the agent transcribe the decision and bound digest through the
-helper:
-
-```sh
 "$ALIGNMENT_HELPER" decide "$PROJECT_ROOT" \
   --decision approved \
   --reviewer "<human-provided label>" \
   --provenance human-message \
   --review-hash "<exact-issued-digest>" \
   --acknowledged-finding "<finding ID>"
-```
-
-`decide` returns `0` only for a valid record and exit `2` for malformed or
-stale input. `approved` additionally requires a presented/published review,
-human-message provenance, and equality of issued, rendered, supplied, and
-current hashes. Never infer approval from silence, a prior design approval, an
-agent statement, or a Site interaction.
-
-## Check and hand off
-
-```sh
 "$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json
 "$ALIGNMENT_HELPER" handoff "$PROJECT_ROOT"
+"$ALIGNMENT_HELPER" check "$PROJECT_ROOT" --json
 ```
 
-`check` exits `0` with `ready: true` or `1` with stable mechanical reasons such
-as `decision-not-approved`, `presentation-not-presented`, `non-human-provenance`,
-`stale-approval`, `hash-mismatch`, `handoff-state-missing`,
-`handoff-file-invalid`, or `handoff-digest-mismatch`. `handoff` exits `0` only
-after the gate is ready, writes the exact approved digest into
-`alignment/handoff.md`, and records a SHA-256 binding to those exact handoff
-bytes; it exits `2` otherwise.
+The human never copies the digest or runs commands. Any included-file change invalidates exact-snapshot approval. The helper proves process integrity only, never semantic correctness or authenticated identity.
 
-The next step is `superpowers:brainstorming` with `handoff.md` and the complete
-dossier as required context. After reading those files, the agent checks the
-gate again immediately before brainstorming. If stale, it returns to
-presentation/reapproval. If Superpowers is unavailable, it preserves the
-verified handoff and reports delivery as pending rather than bypassing the
-dependency.
+## Handoff to Superpowers
+
+Superpowers receives `handoff.md`, the process contract, named dossier sources, review findings, and accepted limitations. Exact-snapshot mode also requires a final successful helper check.
+
+The downstream-rigor recommendation is evidence rather than command. Superpowers recalibrates against current risk and may move in either direction. Hard gates remain for irreversible, destructive, security-sensitive, or external actions; planning documents, TDD, review fanout, and release ceremony are not added automatically when the actual claims and risks do not justify them.

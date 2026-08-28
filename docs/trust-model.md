@@ -1,67 +1,38 @@
 # Trust model
 
-Epistemic Alignment separates human/model judgment from deterministic process
-mechanics. This boundary is the central safety property of version 0.1.0.
+Epistemic Alignment separates human/model judgment from optional process mechanics. No mode turns a dossier into proof of correctness.
 
-## What the helper proves
+## What human review establishes
 
-- The manifest uses a supported shape and declared paths remain within the dossier.
-- Included UTF-8 files produce a deterministic `sha256-v1` snapshot.
-- The issued, rendered, human-approved, current, and handed-off hashes are equal.
-- A presentation has status `presented` or `published` before approval.
-- The stored approval provenance is `human-message`.
-- A later included-file change makes the approval stale and blocks handoff.
-- A generated handoff is a regular non-symlink file at the expected path whose
-  exact bytes match the `content_sha256` stored by the helper.
+An explicit current human message may establish only that the presented dossier is an adequate basis for downstream brainstorming, including any visibly accepted limitations. It does not establish semantic completeness, implementation correctness, security, estimates, consensus, authenticated identity, or regulatory compliance.
 
-## What it does not prove
+Silence, generic prior permission, a Site control, agent confidence, edited state, test fixtures, and approval of the plugin itself are not dossier approval.
 
-- That goals, use cases, BDD examples, C4 models, or ADRs are correct or complete.
-- That traceability links or scenario coverage are semantically sufficient.
-- That contradictions or open questions are resolved.
-- That stakeholders reached consensus.
-- That the reviewer label is an authenticated identity or cryptographic signature.
-- That Codex intercepts every relevant prompt.
+## Conversational binding
 
-Skills use model judgment to author and skeptically review semantics. Humans
-decide whether recorded findings are resolved or acceptable. The helper never
-parses those documents into a truth database, calculates coverage, or replaces review.
+Conversational binding is the default when the stakeholder and agent review continuously and no material exact-version requirement exists. The handoff records the presentation reference, reviewed sources, current-message provenance, findings, remaining uncertainty, and recommended downstream rigor.
 
-## Human-only approval
+This mode does not claim cryptographic freshness or exact-byte identity. A material source or finding change before delivery invalidates the conversational decision and requires re-presentation.
 
-An approved decision is authorized only by an explicit human message in the
-current interaction after the review reference, findings, and exact digest are
-shown. Prior permission, silence, generic encouragement, agent confidence,
-pre-edited state, and Site controls are insufficient. The agent may transcribe
-the decision but may not create it. The human can reply simply `approved`,
-`changes_requested`, or `rejected`; the agent binds that current reply to the
-current issued digest internally and supplies the digest to the helper CLI.
+## Exact-snapshot binding
 
-The reviewer label is descriptive only. Consumers that require authenticated
-identity, signatures, quorum, or regulated records must add an external
-approval system; version 0.1.0 makes no such claim.
+Exact-snapshot mode is opt in for version-bound approval, regulated/audited evidence, material stale-version risk across asynchronous or multi-writer review, or difficult-to-reverse downstream action.
 
-## Snapshot scope
+The helper can establish that:
 
-Only `manifest.yaml` metadata and files listed in `snapshot_paths` contribute
-to the digest. `review-state.json`, generated `handoff.md`, presentation output,
-timestamps, renderer state, and stored hashes are excluded. Skills must verify
-that every current reviewable dossier file is included before presentation.
-This membership check is a human/method responsibility, not semantic certification.
+- declared paths remain inside the dossier;
+- included UTF-8 files produce a deterministic `sha256-v1` snapshot;
+- issued, rendered, approved, current, and handed-off digests agree;
+- approval provenance is `human-message`;
+- later included-file changes stale the approval;
+- generated handoff bytes match the helper's recorded content hash.
+
+It cannot judge goals, use cases, BDD, C4, ADRs, traceability, uncertainty, stakeholder consensus, or reviewer identity. Consumers requiring authentication, signatures, quorum, or regulated records need an external system.
 
 ## Presentation and publishing
 
-The Codex Site is derived and read-only. It has no approval button,
-authentication, persistence, or database bindings. Local generation and
-inspection are not publication and not approval. Hosting or updating a Site
-requires separate explicit human consent and cannot manufacture presentation
-or decision state.
+The review Site is derived and read-only. It has no approval button, authentication, persistence, or decision mutation. Local generation is not publication. Hosting or updating requires separate explicit human consent and cannot manufacture approval.
 
-## Downstream trust
+## Downstream process
 
-A verified `handoff.md` proves only that the bytes in the included dossier
-match the snapshot a human explicitly approved. Superpowers must still use
-brainstorming, planning, TDD, review, and verification. The handoff is required
-context, not permission to skip downstream engineering controls. Verification
-also binds the exact helper-generated handoff bytes; retaining the approved
-digest as text inside a modified or substituted handoff is insufficient.
+The handoff includes a recommended rigor level plus retained and omitted gates. Superpowers treats this as current evidence and recalibrates rather than blindly replaying every workflow. Irreversible, destructive, security-sensitive, and external actions retain hard gates. A local reversible prompt change does not inherit release, cryptographic, unit-test, or review-fanout ceremony without a named risk or claim that needs it.

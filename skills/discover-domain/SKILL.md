@@ -97,6 +97,6 @@ Read the artifacts and confirm:
 - open questions explain why they matter;
 - no implementation choice is disguised as a fact.
 
-If a material goal, constraint, or authority question remains unanswered, stay in discovery. Otherwise add `discover` to `completed_phases`, set `current_phase` to `use-cases`, and synchronize `snapshot_paths`.
+If a material goal, constraint, or authority question remains unanswered, stay in discovery. Otherwise add `discover` to `completed_phases` and set `current_phase` to the next material phase. Synchronize `snapshot_paths` only in exact-snapshot mode.
 
 Next transition: `alignment:write-use-cases`.

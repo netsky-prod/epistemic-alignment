@@ -1,8 +1,9 @@
 # Recovery
 
-The workflow is restartable through files. Inspect
-`alignment/manifest.yaml`, the dossier, `alignment/review.md`, and
-`alignment/review-state.json`; do not rely on conversation memory.
+The workflow is restartable through files. Inspect `alignment/manifest.yaml`,
+the dossier, `alignment/review.md`, `alignment/handoff.md`, and the process
+contract; do not rely on conversation memory. Inspect `review-state.json` only
+for exact-snapshot binding.
 
 ## Interrupted authoring
 
@@ -12,7 +13,9 @@ and continue with one material question at a time. If initialization was
 interrupted before `alignment/` existed, rerun `scripts/alignment init`. If the
 directory already exists, the initializer safely refuses to overwrite it.
 
-## Snapshot or manifest failure
+## Exact-snapshot or manifest failure
+
+This section applies only to exact-snapshot binding.
 
 Run:
 
@@ -26,10 +29,15 @@ remove paths merely to force a desired digest. Ensure every current reviewable
 dossier file is included, then rebuild the presentation and issue a fresh
 review.
 
-## Stale approval
+## Stale decision
 
-Any included-file edit after issuance intentionally invalidates approval. Do
-not restore an old hash, edit `review-state.json`, or copy a prior handoff.
+A material source/finding change invalidates conversational approval. Return to
+semantic review, rebuild the presentation, show the changed decision context,
+and obtain a current human reply.
+
+In exact-snapshot mode, any included-file edit after issuance invalidates
+approval. Do not restore an old hash, edit `review-state.json`, or copy a prior
+handoff.
 
 1. Rerun semantic review for the changed dossier.
 2. Rebuild the Site payload from the new snapshot.
@@ -54,7 +62,11 @@ rebuild. If its represented dossier or digest changes, issue a fresh review.
 Publication is optional and consent-gated; a local presented review is valid
 when the stakeholder has actually been shown it.
 
-## Handoff interruption
+## Exact-snapshot handoff interruption
+
+This section applies only to exact-snapshot binding. A conversational handoff
+is recovered by rereading its named sources and re-presenting if material
+content changed.
 
 Rerun `scripts/alignment check <project-root> --json`. The helper fails closed
 if an approval transaction is unresolved, if the handoff file/state disagree,

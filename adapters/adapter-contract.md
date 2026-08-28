@@ -14,8 +14,9 @@ canonical documents:
 {
   "contract_version": "1.0",
   "dossier_path": "<project>/alignment",
-  "snapshot_paths": ["charter.md", "review.md"],
-  "snapshot": {"algorithm": "sha256-v1", "digest": "<64 hex>"},
+  "review_binding": "conversational",
+  "reviewed_paths": ["charter.md", "review.md"],
+  "snapshot": null,
   "semantic_review_path": "<project>/alignment/review.md",
   "host_capabilities": {
     "artifact": false,
@@ -25,10 +26,10 @@ canonical documents:
 }
 ```
 
-`snapshot_paths` and `snapshot` are supplied by the thin helper. The adapter
-may render source text and the human-authored review, but must leave them
-unchanged. A host capability is descriptive; it grants neither publishing nor
-approval permission.
+For exact-snapshot binding, `review_binding` is `exact-snapshot` and `snapshot`
+contains the helper-supplied algorithm/digest. The adapter may render source
+text and the human-authored review, but must leave them unchanged. A host
+capability is descriptive; it grants neither publishing nor approval permission.
 
 ## Output
 
@@ -40,12 +41,14 @@ The adapter returns one JSON-compatible result:
   "version": "1.0",
   "location": "site://draft-or-host-reference",
   "status": "draft",
-  "rendered_hash": "<input snapshot sha256-v1 digest>",
+  "rendered_hash": null,
   "warnings": ["A finding remains unresolved"]
 }
 ```
 
-`status` is one of `draft`, `presented`, `published`, or `failed`.
+In exact-snapshot mode `rendered_hash` equals the input digest. In conversational
+mode it is null and the view visibly says it is not exact-byte bound. `status`
+is one of `draft`, `presented`, `published`, or `failed`.
 `warnings` remain visible presentation notes, never a semantic verdict.
 
 ## Capability predicates and fallbacks
@@ -77,17 +80,14 @@ start review issuance:
 This failure result performs no rendering, no state mutation, and no issue-review call.
 A capability grants neither publishing nor approval permission.
 
-## Snapshot binding and issuance
+## Review binding and issuance
 
-Before `issue-review`, compute a fresh current snapshot, render only its listed
-paths, and require the adapter's `rendered_hash` to equal that input snapshot
-digest. There is no pre-existing issued digest requirement: issuance is what
-records the first issued digest. Immediately after `issue-review`, recheck that
-the current, issued, and rendered hashes are equal; if they diverge, do not
-record a human decision and return to review. The invoking workflow alone
-decides whether a host has actually presented the view, and the
-`approve-handoff` skill alone transcribes an explicit current human message
-through the helper.
+Conversational mode renders the declared reviewed paths and records no digest
+or helper issuance. Exact-snapshot mode computes a fresh snapshot, renders only
+its listed paths, requires `rendered_hash` equality, issues the review, and
+rechecks current/issued/rendered equality. The invoking workflow alone decides
+whether the host actually presented the view; `approve-handoff` alone records
+an explicit current human message in the selected binding mode.
 
 ## Host boundaries
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Approve Handoff"
-  short_description: "Record human approval and handoff"
-  default_prompt: "Use $approve-handoff to verify a human-approved alignment handoff."
+  short_description: "Record a calibrated human handoff"
+  default_prompt: "Use $approve-handoff to record the current human decision and a risk-calibrated handoff."

@@ -41,3 +41,15 @@
 - Assumed:
 - Conflicting:
 - Most consequential open question:
+
+## Process calibration
+
+- Desired deliverables:
+- Material risks this workflow addresses:
+- Reversibility / external effects:
+- Phases and gates retained:
+- Phases and gates omitted, with reasons:
+- Review binding: conversational | exact-snapshot
+- Recommended downstream rigor: direct | bounded | full | critical
+- Escalation triggers:
+- Downgrade / stop triggers:

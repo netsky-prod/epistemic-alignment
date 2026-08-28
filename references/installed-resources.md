@@ -6,14 +6,16 @@ Resolve the absolute path of the active `SKILL.md`. Its directory is `<plugin-ro
 
 ```text
 ALIGNMENT_PLUGIN_ROOT=<absolute installed plugin root>
-ALIGNMENT_HELPER=<ALIGNMENT_PLUGIN_ROOT>/scripts/alignment
+ALIGNMENT_HELPER=<ALIGNMENT_PLUGIN_ROOT>/scripts/alignment  # exact-snapshot mode only
 PROJECT_ROOT=<absolute target project root>
 ```
 
-Before the first mutation, verify the helper exists and run `"$ALIGNMENT_HELPER" --version`. Invoke every helper command through this resolved absolute path and quote both paths, for example:
+When the process contract selects exact-snapshot binding, verify the helper exists and run `"$ALIGNMENT_HELPER" --version` before its first use. Invoke every helper command through this resolved absolute path and quote both paths, for example:
 
 ```sh
 "$ALIGNMENT_HELPER" snapshot "$PROJECT_ROOT" --json
 ```
+
+Conversational binding does not invoke snapshot/decision/check/handoff helper commands. It may still use the initializer if desired, or copy the human-readable templates directly without overwriting existing files.
 
 Resolve shared references and presentation templates from `ALIGNMENT_PLUGIN_ROOT`. Write generated dossier and Site files only under `PROJECT_ROOT`. If the host does not expose the loaded skill path, locate the plugin through the host's installed-plugin inventory; never guess a cache path or copy bundled tooling into the target repository.

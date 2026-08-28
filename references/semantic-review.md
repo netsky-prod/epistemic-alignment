@@ -10,7 +10,7 @@ Semantic review challenges whether the dossier tells one coherent, evidence-back
 4. **Behavior coverage:** critical paths/rules/boundaries have observable examples; proposed behavior is labelled.
 5. **Architecture responsibility:** priority behavior has owners; boundaries, data, trust, failure, and operations are explained.
 6. **Decision quality:** material choices expose drivers, alternatives, consequences, risks, and invalidating assumptions.
-7. **Stakeholder readability:** a non-author can understand the proposal, uncertainty, findings, and requested decision.
+7. **Stakeholder and process readability:** a non-author can understand the proposal, uncertainty, findings, requested decision, binding mode, and why retained/omitted gates match the actual risk.
 
 ## Bidirectional traceability
 
@@ -56,6 +56,7 @@ Dispositions:
 - Never convert “no findings observed” into proof of correctness.
 - Never close a contradiction by choosing the most convenient interpretation.
 - Separate implementation concerns that belong downstream from alignment gaps that block shared understanding.
+- Flag process artifacts or gates whose only justification is prior effort or tool availability; recommend removal instead of hardening unsupported machinery.
 
 ## Review output
 

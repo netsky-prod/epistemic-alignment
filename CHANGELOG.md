@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Made workflow depth risk-calibrated: phases and gates now require a named
+  decision or material risk, and agents must remove unsupported process when it
+  starts to dominate the deliverable.
+- Made conversational human approval the default. Exact snapshot hashes remain
+  an opt-in binding mode for audit, asynchronous review, multi-writer staleness,
+  or difficult-to-reverse downstream action.
+- Added an explicit downstream-rigor recommendation so Superpowers can
+  recalibrate instead of automatically expanding every handoff into planning,
+  TDD, review fanout, and release ceremony.
 - Expanded all eight alignment skills into complete agent workflows with
   interview loops, epistemic discipline, phase completion criteria, recovery,
   and explicit downstream transitions.

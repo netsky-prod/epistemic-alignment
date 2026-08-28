@@ -19,7 +19,7 @@ Use [installed resources](../../references/installed-resources.md), the full [se
 
 Record:
 
-- snapshot or pending snapshot being reviewed;
+- binding mode and dossier version/source set being reviewed;
 - files and evidence actually inspected;
 - important sources unavailable to the reviewer;
 - stakeholder perspectives represented or missing;
@@ -57,6 +57,8 @@ Check whether material choices have owners, drivers, alternatives, consequences,
 
 Ask whether a non-author stakeholder can understand what is proposed, what is known, what remains uncertain, which findings require acceptance, and what exactly approval would authorize.
 
+Check the process contract too: every retained phase/gate should protect a named risk or decision; every omission should remain safe; binding mode and downstream rigor should match reversibility and failure stakes. Treat unsupported process machinery as scope to remove, not architecture to harden.
+
 ## Traceability walk
 
 Select each critical outcome and follow it end to end:
@@ -86,6 +88,6 @@ Ask one material question only when evidence cannot locate or characterize a fin
 
 Before transition confirm that open blocking findings are clearly visible, accepted limitations name their consequences, resolved findings link to changed evidence, and review scope remains honest.
 
-Add `review` to `completed_phases`, set `current_phase` to `presentation`, include `review.md` and all current reviewable artifacts in `snapshot_paths`, and leave semantic judgment to the human stakeholder.
+Add `review` to `completed_phases` and set `current_phase` to `presentation`. In exact-snapshot mode, include `review.md` and all current reviewable artifacts in `snapshot_paths`. Leave semantic judgment to the human stakeholder.
 
 Next transition: `alignment:build-review`.

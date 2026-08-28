@@ -5,13 +5,14 @@ review surface without owning decisions or mutating the dossier.
 
 ## Common contract
 
-Every adapter receives the dossier directory, complete included-path list and
-issued `sha256-v1` digest, human-readable semantic review, and host
-capabilities. It returns an adapter name/version, generated location or
-reference, `draft`/`presented`/`published` status, rendered digest, and warnings.
+Every adapter receives the dossier directory, reviewed paths, selected binding
+mode, human-readable semantic review, and host capabilities. Exact-snapshot
+mode also supplies a `sha256-v1` digest. The adapter returns its name/version,
+location, status, optional rendered digest, and warnings.
 
 All adapters must expose the same evidence, uncertainty, contradictions,
-questions, findings, and exact digest. Every material summary links to a
+questions, findings, and binding mode. Exact-snapshot views also expose the
+digest. Every material summary links to a
 substantive evidence excerpt or served read-only source view—not merely a
 repeated path label. Presentation is never approval. See the full
 [adapter contract](../adapters/adapter-contract.md).
@@ -30,16 +31,16 @@ requires explicit consent.
 
 The planned Claude adapter renders the same input as an Artifact, preserves
 textual evidence references and uncertainty labels, and returns an Artifact
-reference plus rendered hash and warnings. Installation metadata, invocation,
+reference plus optional rendered hash and warnings. Installation metadata, invocation,
 visual QA, and current-message approval transcription require a separate
 implementation cycle. Details: [Claude roadmap](../adapters/claude.md).
 
 ## OpenCode roadmap
 
 The planned OpenCode adapter uses a shared local static renderer with explicit
-preview commands and OpenCode-specific skill/extension metadata. It must bind
-the preview to the exact dossier digest and keep approval in the host
-conversation. Details: [OpenCode roadmap](../adapters/opencode.md).
+preview commands and OpenCode-specific skill/extension metadata. It keeps
+approval in the host conversation and binds a digest only in exact-snapshot
+mode. Details: [OpenCode roadmap](../adapters/opencode.md).
 
 ## Qwen Code roadmap
 
