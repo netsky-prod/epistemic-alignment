@@ -1,61 +1,107 @@
 # Epistemic Alignment
 
-Epistemic Alignment is a Codex plugin for reaching a shared, inspectable
-understanding of a complex software initiative before implementation planning.
-It guides discovery, Cockburn use cases, BDD examples, C4 architecture, ADRs,
-semantic review, a stakeholder-facing review Site, explicit human approval,
-and a risk-calibrated handoff to Superpowers.
+[![Agent Skills](https://img.shields.io/badge/Agent_Skills-8-5b5bd6)](#what-is-in-the-plugin)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776ab)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/netsky-prod/epistemic-alignment?style=social)](https://github.com/netsky-prod/epistemic-alignment/stargazers)
 
-The product is the agent workflow: eight substantial skills guide inquiry,
-goal modeling, examples, responsibility design, independent review, and a
-human decision. The workflow records which phases and gates are justified,
-which are intentionally omitted, and how much downstream process is warranted.
-A thin dependency-free Python helper is available when exact-snapshot binding
-is materially required; ordinary review uses conversational approval without a
-hash ceremony. The helper is not a requirements compiler or semantic validator.
+**Stop coding the wrong product.**
 
-## What is included
+Epistemic Alignment is a risk-calibrated agent workflow that establishes a
+shared, inspectable understanding of a software initiative before
+implementation planning begins. It separates evidence from assumptions, asks
+one material question at a time, exposes disagreement while it is still cheap
+to resolve, and hands the accepted model to the implementation workflow.
 
-- Eight `alignment:*` skills, with `alignment:align-project` as the front door.
-- Deep Cockburn, BDD, C4/ADR, epistemic-discovery, semantic-review, and
-  stakeholder-presentation methods.
-- An optional Python 3.9-compatible exact-snapshot helper with no third-party
-  runtime dependencies.
-- Portable Markdown, Gherkin, Mermaid, and ADR templates.
-- A read-only ChatGPT Sites adapter for Codex stakeholder review.
-- A complete worked exact-snapshot example under `examples/approved-project/`.
+It is not a requirements-document factory. Small, clear work stays small. The
+full workflow activates only when ambiguity, architecture, stakeholder
+conflict, trust boundaries, migration, or failure cost justify it.
 
-## Quick start
+```text
+request -> risk calibration -> material questions only
+        -> use cases / BDD / C4 / ADRs only when useful
+        -> independent semantic review -> stakeholder decision
+        -> implementation handoff with matching rigor
+```
 
-Install the local plugin using [the installation guide](docs/installation.md),
-start a new Codex task, and ask:
+## See the result
+
+The plugin can turn the alignment dossier into a read-only stakeholder review
+surface. The human decision still happens explicitly in the host conversation;
+the Site never approves itself.
+
+[![Epistemic Alignment stakeholder review](assets/site-desktop.png)](assets/site-desktop.png)
+
+## Install from GitHub
+
+Add this repository as a Codex plugin marketplace:
+
+```sh
+codex plugin marketplace add netsky-prod/epistemic-alignment
+```
+
+Then open Codex, run `/plugins`, choose **Epistemic Alignment**, and install
+**Alignment**. Start a new task so the bundled skills are discovered.
+
+Ask the agent:
 
 > Use alignment:align-project to align this initiative before implementation
 > planning.
 
-The normal flow is:
+If the workflow saves you from one expensive misunderstanding,
+[star the repository](https://github.com/netsky-prod/epistemic-alignment) so
+other agent builders can find it.
 
-```text
-calibrate -> only material alignment phases -> presentation
-          -> human decision -> handoff with downstream rigor
-        -> superpowers:brainstorming
-```
+For local development, reinstall, and removal, see the
+[installation guide](docs/installation.md).
 
-Canonical project documents live in `alignment/`. The generated review project
-lives in `alignment-review/site/`. Approval happens only in the host
-conversation; the Site has no approval button or persistence. After the Site,
-the stakeholder can reply simply `approved`, `changes_requested`, or
-`rejected`. Conversational binding is the default; an issued digest is used
-only when the process contract names a real exact-version requirement.
+## What it catches
 
-## Optional exact-snapshot helper
+- Stakeholders using the same term for different concepts.
+- An architectural choice silently presented as a product requirement.
+- Happy-path acceptance criteria with missing authorization or failure paths.
+- A proposed assumption that has drifted into an alleged fact.
+- Responsibilities that fall between systems, teams, or trust boundaries.
+- Approval that no longer matches the artifacts being handed to implementation.
 
-Skills resolve bundled resources relative to their installed plugin path. They
-do not expect the target repository to contain this plugin's `scripts/` or
-`adapters/` directories. The commands below are used only by exact-snapshot
-mode; normal users interact with the agent in plain language.
+## How much process does it use?
 
-## Helper commands
+The front-door skill writes a short process contract and recommends one of four
+levels:
+
+| Level | Use it for | Result |
+| --- | --- | --- |
+| `direct` | Bounded, already-understood work | Explain the rationale and proceed without a dossier |
+| `bounded` | One or two material uncertainties | Create only the artifacts needed to resolve them |
+| `full` | Cross-cutting product and architecture work | Run the justified discovery, behavior, architecture, review, and approval phases |
+| `critical` | High-cost, regulated, or difficult-to-reverse decisions | Add explicit provenance and exact-snapshot binding where genuinely required |
+
+Before every phase, the agent must name the decision it will resolve or the
+material risk it will reduce. If it cannot, the phase is skipped.
+
+## What is in the plugin
+
+- `alignment:align-project` — calibrates risk and routes the workflow.
+- `alignment:discover-domain` — separates observed facts, stakeholder claims,
+  inferences, assumptions, contradictions, and open questions.
+- `alignment:write-use-cases` — captures actor goals with Cockburn use cases.
+- `alignment:specify-behavior` — writes observable BDD/Gherkin examples.
+- `alignment:model-architecture` — explains responsibilities with C4 and ADRs.
+- `alignment:review-alignment` — performs an independent cross-artifact review.
+- `alignment:build-review` — creates the stakeholder-facing review surface.
+- `alignment:approve-handoff` — records the human decision and prepares the
+  downstream handoff.
+
+The canonical artifacts are portable Markdown, Gherkin, Mermaid, and ADRs.
+Adapter guidance is included for Codex, Claude, OpenCode, and Qwen Code; the
+packaged marketplace installation currently targets Codex.
+
+## Example output
+
+A completed exact-snapshot example lives in
+[`examples/approved-project/`](examples/approved-project/). A normal run does
+not require hashes: conversational approval is the default. The dependency-free
+Python helper exists for cases where approval must bind to exact bytes.
 
 ```sh
 scripts/alignment init <project-root> --project-id <id> --title <title>
@@ -69,20 +115,8 @@ scripts/alignment check <project-root> --json
 scripts/alignment handoff <project-root>
 ```
 
-See [usage](docs/usage.md) for process calibration, phase outputs, and both
-decision modes,
-[recovery](docs/recovery.md) for restart and stale-review handling, and the
-[trust model](docs/trust-model.md) before relying on an approval record.
-
-Publishing the review Site is optional and requires separate explicit human
-consent. This repository does not publish a Site or plugin automatically.
-
-## Release metadata
-
-The recommended GitHub repository name is `epistemic-alignment`, and the first
-release tag is `v0.1.0`. The manifest intentionally omits repository and
-homepage fields until an actual remote exists. Review screenshots are included
-as plugin assets.
+The helper proves snapshot and process integrity. It does not prove semantic
+correctness or reviewer identity.
 
 ## Documentation
 
@@ -93,4 +127,4 @@ as plugin assets.
 - [Renderer contract and future adapters](docs/adapters.md)
 - [Release history](CHANGELOG.md)
 
-The package is licensed under the MIT License.
+Epistemic Alignment is released under the [MIT License](LICENSE).
