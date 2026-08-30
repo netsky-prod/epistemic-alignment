@@ -1,0 +1,21 @@
+{
+  "name": "epistemic-alignment",
+  "interface": {
+    "displayName": "Epistemic Alignment"
+  },
+  "plugins": [
+    {
+      "name": "alignment",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/netsky-prod/epistemic-alignment.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,5 +1,19 @@
 # Installation
 
+## Install from the public GitHub marketplace
+
+Add the canonical repository as a Codex marketplace:
+
+```sh
+codex plugin marketplace add netsky-prod/epistemic-alignment
+```
+
+Start Codex, run `/plugins`, choose **Epistemic Alignment**, and install
+**Alignment**. Start a new task after installation so the eight
+`alignment:*` skills are discovered.
+
+Use the remaining sections only when developing or validating a local checkout.
+
 ## Requirements
 
 - Codex desktop with the `codex` CLI available.
@@ -19,7 +33,7 @@ python3 -m venv "$validator_venv"
 "$validator_venv/bin/python" -m pip install --disable-pip-version-check "PyYAML==6.0.2"
 ```
 
-## Local personal installation
+## Local development installation
 
 Run these commands from a clean checkout. The plugin-creator helper creates the
 personal marketplace entry; do not edit `~/.agents/plugins/marketplace.json` or
